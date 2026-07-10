@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Fenton Digital Badges
- * Plugin URI:        https://github.com/fenton/digital-badges
+ * Plugin URI:        https://github.com/Steve-Fenton/digital-badges
  * Description:       Issue, manage, and display digital badges.
  * Version:           0.1.8
  * Requires at least: 6.2
