@@ -125,6 +125,9 @@ if ( ! empty( $assertion->expires ) ) {
 						data-db-share-title="<?php echo esc_attr( $fenton_digital_badges_badge_name ); ?>"
 						data-db-share-text="<?php echo esc_attr( $share_text ); ?>"
 						data-db-share-url="<?php echo esc_url( $attestation_url ); ?>"
+						<?php if ( '' !== $image_url ) : ?>
+							data-db-share-image="<?php echo esc_url( $image_url ); ?>"
+						<?php endif; ?>
 						hidden
 					>
 						<?php esc_html_e( 'Share', 'fenton-digital-badges' ); ?>

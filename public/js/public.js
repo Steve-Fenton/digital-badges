@@ -5,6 +5,53 @@
 		return typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 	}
 
+	function buildShareText(title, description, url) {
+		var parts = [];
+		if (title) {
+			parts.push(title);
+		}
+		if (description) {
+			parts.push(description);
+		}
+		if (url) {
+			parts.push(url);
+		}
+		return parts.join('\n\n');
+	}
+
+	function extensionForMime(mime) {
+		if (mime === 'image/jpeg') {
+			return 'jpg';
+		}
+		if (mime === 'image/webp') {
+			return 'webp';
+		}
+		if (mime === 'image/gif') {
+			return 'gif';
+		}
+		return 'png';
+	}
+
+	function fetchShareImage(imageUrl) {
+		return fetch(imageUrl)
+			.then(function (response) {
+				if (!response.ok) {
+					throw new Error('Image fetch failed');
+				}
+				return response.blob();
+			})
+			.then(function (blob) {
+				var type = blob.type || 'image/png';
+				return new File([blob], 'badge.' + extensionForMime(type), { type: type });
+			});
+	}
+
+	function sharePayload(payload) {
+		return navigator.share(payload).catch(function () {
+			// User cancelled or share failed — no-op.
+		});
+	}
+
 	document.querySelectorAll('[data-db-share]').forEach(function (button) {
 		if (canWebShare()) {
 			button.removeAttribute('hidden');
@@ -24,15 +71,40 @@
 				return;
 			}
 
-			var payload = {
-				title: shareButton.getAttribute('data-db-share-title') || document.title,
-				text: shareButton.getAttribute('data-db-share-text') || '',
-				url: shareButton.getAttribute('data-db-share-url') || window.location.href
+			var title = shareButton.getAttribute('data-db-share-title') || document.title;
+			var description = shareButton.getAttribute('data-db-share-text') || '';
+			var url = shareButton.getAttribute('data-db-share-url') || window.location.href;
+			var imageUrl = shareButton.getAttribute('data-db-share-image') || '';
+			var text = buildShareText(title, description, url);
+
+			var basePayload = {
+				title: title,
+				text: text,
+				url: url
 			};
 
-			navigator.share(payload).catch(function () {
-				// User cancelled or share failed — no-op.
-			});
+			if (!imageUrl || typeof navigator.canShare !== 'function') {
+				sharePayload(basePayload);
+				return;
+			}
+
+			fetchShareImage(imageUrl)
+				.then(function (file) {
+					var withFiles = {
+						title: title,
+						text: text,
+						files: [file]
+					};
+
+					if (navigator.canShare(withFiles)) {
+						return sharePayload(withFiles);
+					}
+
+					return sharePayload(basePayload);
+				})
+				.catch(function () {
+					sharePayload(basePayload);
+				});
 			return;
 		}
 
