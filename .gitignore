@@ -1,0 +1,19 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env / secrets
+.env
+.env.*
+
+# Build / cache
+*.log
+.phpunit.result.cache
+/coverage/
