@@ -11,5 +11,15 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-// Stub: remove options, transients, and custom data on uninstall.
-// delete_option( 'digital_badges_settings' );
+global $wpdb;
+
+delete_option( 'digital_badges_issuer' );
+delete_option( 'digital_badges_lookup_secret' );
+delete_option( 'digital_badges_db_version' );
+
+$table = $wpdb->prefix . 'db_assertions';
+// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is constructed from prefix.
+$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+
+delete_post_meta_by_key( '_db_criteria_url' );
+delete_post_meta_by_key( '_db_tags' );

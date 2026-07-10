@@ -39,7 +39,8 @@ final class Post_Types {
 				'show_in_rest'        => true,
 				'menu_icon'           => 'dashicons-awards',
 				'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
-				'rewrite'             => array( 'slug' => 'badges' ),
+				// Avoid clashing with public routes under /badges/assertion/, /badges/find/, etc.
+				'rewrite'             => array( 'slug' => 'badge' ),
 			)
 		);
 	}

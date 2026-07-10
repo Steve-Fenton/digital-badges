@@ -1,9 +1,481 @@
-/* Digital Badges — public styles (stub) */
+/**
+ * Public styles for Digital Badges.
+ */
 
 .digital-badge {
-	/* stub */
+	display: inline-block;
+	max-width: 220px;
+	text-align: center;
+}
+
+.digital-badge__image {
+	display: block;
+	width: 100%;
+	height: auto;
+	margin: 0 auto 0.5rem;
 }
 
 .digital-badge__title {
-	/* stub */
+	margin: 0;
+	font-size: 1rem;
+}
+
+.db-find {
+	max-width: 40rem;
+	margin: 2rem auto;
+	padding: 0 1rem;
+}
+
+.db-find__title {
+	margin: 0 0 0.5rem;
+	font-size: 1.75rem;
+}
+
+.db-find__intro {
+	margin: 0 0 1.5rem;
+	color: #444;
+}
+
+.db-find__label {
+	display: block;
+	margin-bottom: 0.35rem;
+	font-weight: 600;
+}
+
+.db-find__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.db-find__input {
+	flex: 1 1 14rem;
+	padding: 0.55rem 0.75rem;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
+
+.db-find__submit,
+.db-attestation__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	padding: 0.7rem 1.15rem;
+	border: 1px solid var(--db-ink, #1c1917);
+	border-radius: var(--db-radius-sm, 6px);
+	background: var(--db-ink, #1c1917);
+	color: #fff;
+	text-decoration: none;
+	cursor: pointer;
+	font: inherit;
+	font-weight: 600;
+	line-height: 1.2;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.db-find__submit:hover,
+.db-attestation__btn:hover {
+	transform: translateY(-1px);
+}
+
+.db-attestation__btn {
+	background: #fff;
+	color: var(--db-ink, #1c1917);
+}
+
+.db-attestation__btn:hover {
+	background: var(--db-surface-muted, #f5f1eb);
+}
+
+.db-attestation__btn--primary {
+	background: var(--db-accent, #0a66c2);
+	border-color: var(--db-accent, #0a66c2);
+	color: #fff;
+}
+
+.db-attestation__btn--primary:hover {
+	background: var(--db-accent-hover, #084e96);
+	border-color: var(--db-accent-hover, #084e96);
+	color: #fff;
+}
+
+.db-attestation__btn--ghost {
+	background: transparent;
+	border-color: var(--db-border, #d6d0c8);
+	color: var(--db-ink-muted, #44403c);
+	font-weight: 500;
+}
+
+.db-attestation__btn--ghost:hover {
+	background: var(--db-surface-muted, #f5f1eb);
+	border-color: var(--db-ink-muted, #44403c);
+	color: var(--db-ink, #1c1917);
+}
+
+.db-find__error {
+	margin-top: 1rem;
+	color: #b32d2e;
+}
+
+.db-find__list {
+	list-style: none;
+	margin: 1.5rem 0 0;
+	padding: 0;
+	display: grid;
+	gap: 0.75rem;
+}
+
+.db-find__card {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem;
+	border: 1px solid #ddd;
+	border-radius: 6px;
+	text-decoration: none;
+	color: inherit;
+}
+
+.db-find__image {
+	flex: 0 0 auto;
+	border-radius: 4px;
+}
+
+.db-find__meta {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.db-find__badge-name {
+	font-weight: 600;
+}
+
+.db-find__issued {
+	font-size: 0.875rem;
+	color: #666;
+}
+
+/* -------------------------------------------------------------------------
+   Attestation page — certificate layout (override via --db-* variables)
+   ------------------------------------------------------------------------- */
+
+.db-attestation-shell {
+	--db-ink: #14213d;
+	--db-ink-muted: #4a5568;
+	--db-surface: #ffffff;
+	--db-surface-muted: #f0f4f8;
+	--db-border: #d9e2ec;
+	--db-accent: #0a66c2;
+	--db-accent-hover: #084e96;
+	--db-radius: 4px;
+	--db-radius-sm: 8px;
+	--db-shadow: 0 20px 48px rgba(20, 33, 61, 0.1);
+	--db-font: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+	--db-font-ui: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+	--db-cert-max: 46rem;
+
+	box-sizing: border-box;
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	min-height: 0;
+	padding: clamp(2rem, 5vw, 4rem) 1rem clamp(3rem, 6vw, 5rem);
+	background: transparent;
+	font-family: var(--db-font-ui);
+	color: var(--db-ink);
+}
+
+.db-attestation-shell *,
+.db-attestation-shell *::before,
+.db-attestation-shell *::after {
+	box-sizing: border-box;
+}
+
+.db-attestation-layout {
+	width: 100%;
+	max-width: var(--db-cert-max);
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 1.75rem;
+}
+
+.db-attestation--certificate {
+	margin: 0;
+	padding: 0.65rem;
+	background: var(--db-surface);
+	border: 1px solid var(--db-border);
+	border-radius: var(--db-radius);
+	box-shadow: var(--db-shadow);
+}
+
+.db-attestation__frame {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: 1rem;
+	padding: clamp(1.75rem, 5vw, 3rem) clamp(1.25rem, 4vw, 2.75rem);
+	border: 2px solid var(--db-ink);
+	outline: 1px solid var(--db-border);
+	outline-offset: -10px;
+	background:
+		linear-gradient(180deg, rgba(240, 244, 248, 0.65) 0%, transparent 28%),
+		var(--db-surface);
+}
+
+.db-attestation__eyebrow {
+	margin: 0;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--db-ink-muted);
+}
+
+.db-attestation__figure {
+	margin: 0.35rem 0 0.5rem;
+}
+
+.db-attestation__image {
+	display: block;
+	width: clamp(150px, 32vw, 210px);
+	height: auto;
+	margin: 0 auto;
+	border-radius: 50%;
+	background: var(--db-surface-muted);
+	box-shadow: 0 10px 28px rgba(20, 33, 61, 0.12);
+}
+
+.db-attestation__title {
+	margin: 0;
+	max-width: 22ch;
+	font-family: var(--db-font);
+	font-size: clamp(1.9rem, 5vw, 2.75rem);
+	font-weight: 700;
+	line-height: 1.15;
+	letter-spacing: -0.02em;
+	color: var(--db-ink);
+}
+
+.db-attestation__earner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.35rem;
+	margin: 0.35rem 0 0;
+	max-width: 36rem;
+}
+
+.db-attestation__earner-label {
+	font-size: 0.95rem;
+	font-style: italic;
+	color: var(--db-ink-muted);
+}
+
+.db-attestation__earner-name {
+	font-family: var(--db-font);
+	font-size: clamp(1.5rem, 3.5vw, 2rem);
+	font-weight: 700;
+	line-height: 1.2;
+	color: var(--db-ink);
+	padding-bottom: 0.2rem;
+	border-bottom: 1px solid var(--db-border);
+}
+
+.db-attestation__description {
+	margin: 0.5rem 0 0;
+	max-width: 38rem;
+	font-size: 1.02rem;
+	line-height: 1.65;
+	color: var(--db-ink-muted);
+}
+
+.db-attestation__evidence {
+	margin: 0.25rem 0 0;
+}
+
+.db-attestation__evidence-link {
+	color: var(--db-accent);
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+}
+
+.db-attestation__evidence-link:hover {
+	color: var(--db-accent-hover);
+}
+
+.db-attestation__footer {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+	gap: 1.25rem 1.5rem;
+	width: 100%;
+	margin-top: 1.25rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--db-border);
+}
+
+.db-attestation__footer-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.db-attestation__footer-label {
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--db-ink-muted);
+}
+
+.db-attestation__footer-value {
+	font-family: var(--db-font);
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--db-ink);
+}
+
+.db-attestation__issuer-row {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+}
+
+.db-attestation__issuer-logo {
+	width: 32px;
+	height: 32px;
+	object-fit: contain;
+	border-radius: 4px;
+	background: #fff;
+	border: 1px solid var(--db-border);
+}
+
+.db-attestation-tools {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.db-attestation__actions {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 1.25rem;
+	background: var(--db-surface);
+	border: 1px solid var(--db-border);
+	border-radius: var(--db-radius-sm);
+	box-shadow: var(--db-shadow);
+}
+
+.db-attestation__actions-primary,
+.db-attestation__actions-secondary {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5rem;
+}
+
+.db-attestation__json-panel {
+	width: 100%;
+	margin-top: 0.35rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--db-border);
+	text-align: left;
+}
+
+.db-attestation__json-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+}
+
+.db-attestation__json-link {
+	font-size: 0.85rem;
+	font-weight: 500;
+	color: var(--db-accent);
+}
+
+.db-attestation__json-code,
+.db-attestation__embed-code {
+	display: block;
+	width: 100%;
+	margin: 0 0 0.75rem;
+	padding: 0.9rem 1rem;
+	border: 1px solid var(--db-border);
+	border-radius: var(--db-radius-sm);
+	background: var(--db-surface-muted);
+	color: var(--db-ink);
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 0.8rem;
+	line-height: 1.45;
+	text-align: left;
+	resize: vertical;
+}
+
+.db-attestation__embed {
+	padding: 1.25rem;
+	background: var(--db-surface);
+	border: 1px solid var(--db-border);
+	border-radius: var(--db-radius-sm);
+	box-shadow: var(--db-shadow);
+	text-align: center;
+}
+
+.db-attestation__embed-title {
+	margin: 0 0 0.35rem;
+	font-family: var(--db-font);
+	font-size: 1.2rem;
+	font-weight: 700;
+}
+
+.db-attestation__embed-intro {
+	margin: 0 0 0.85rem;
+	color: var(--db-ink-muted);
+	font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+	.db-attestation__footer {
+		grid-template-columns: 1fr;
+	}
+}
+
+.db-embed-body {
+	font-family: system-ui, sans-serif;
+}
+
+.db-embed {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	text-decoration: none;
+	color: #1a1a1a;
+	text-align: center;
+	font-family: system-ui, sans-serif;
+}
+
+.db-embed__image {
+	display: block;
+	max-width: 140px;
+	height: auto;
+}
+
+.db-embed__title {
+	font-size: 0.9rem;
+	font-weight: 600;
+	line-height: 1.3;
 }
