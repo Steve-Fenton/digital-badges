@@ -272,6 +272,47 @@ final class Assertion_Repository {
 	}
 
 	/**
+	 * Restore a revoked assertion to active.
+	 */
+	public static function unrevoke( string $uid ): bool {
+		global $wpdb;
+
+		$updated = $wpdb->update(
+			self::table_name(),
+			array(
+				'revoked'        => 0,
+				'revoked_reason' => '',
+			),
+			array(
+				'uid'     => $uid,
+				'revoked' => 1,
+			),
+			array( '%d', '%s' ),
+			array( '%s', '%d' )
+		);
+
+		return false !== $updated && $updated > 0;
+	}
+
+	/**
+	 * Permanently delete an assertion. Only succeeds when the assertion is revoked.
+	 */
+	public static function delete_revoked( string $uid ): bool {
+		global $wpdb;
+
+		$deleted = $wpdb->delete(
+			self::table_name(),
+			array(
+				'uid'     => $uid,
+				'revoked' => 1,
+			),
+			array( '%s', '%d' )
+		);
+
+		return false !== $deleted && $deleted > 0;
+	}
+
+	/**
 	 * Public URL for hosted assertion JSON.
 	 */
 	public static function json_url( string $uid ): string {

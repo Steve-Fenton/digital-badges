@@ -4,7 +4,7 @@ Tags: badges, open badges, credentials, certificates, linkedin
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.8
+Stable tag: 0.1.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,7 +22,7 @@ Fenton Digital Badges lets you issue [Open Badges 1.0](https://github.com/mozill
 * Public Open Badges JSON endpoints for issuer, badge class, and assertion
 * Public attestation pages with share, embed, download, and LinkedIn Add to Profile
 * Email lookup so earners can find badges issued to them
-* Assertions list with revoke support
+* Assertions list with revoke, restore, and delete (revoked only)
 * Recipient emails are salted/hashed — plaintext emails are never stored
 
 **Shortcodes**

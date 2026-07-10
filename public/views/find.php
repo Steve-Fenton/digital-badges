@@ -2,7 +2,7 @@
 /**
  * Find badges by email form and results.
  *
- * Expected vars: $results (list<object>), $error (string), $searched (bool), $form_action (string)
+ * Expected vars: $results (list<object>), $error (string), $searched (bool), $fenton_digital_badges_form_action (string)
  *
  * @package FentonDigitalBadges
  */
@@ -13,8 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! isset( $form_action ) || ! is_string( $form_action ) || '' === $form_action ) {
-	$form_action = home_url( '/badges/find/' );
+if ( ! isset( $fenton_digital_badges_form_action ) || ! is_string( $fenton_digital_badges_form_action ) || '' === $fenton_digital_badges_form_action ) {
+	$fenton_digital_badges_form_action = home_url( '/badges/find/' );
 }
 ?>
 <div class="db-find">
@@ -23,7 +23,7 @@ if ( ! isset( $form_action ) || ! is_string( $form_action ) || '' === $form_acti
 		<p class="db-find__intro"><?php esc_html_e( 'Enter the email address used when your badge was issued. We look up a hash of your email — the address itself is not stored.', 'fenton-digital-badges' ); ?></p>
 	</header>
 
-	<form class="db-find__form" method="post" action="<?php echo esc_url( $form_action ); ?>">
+	<form class="db-find__form" method="post" action="<?php echo esc_url( $fenton_digital_badges_form_action ); ?>">
 		<?php wp_nonce_field( 'db_find_badges', 'db_find_nonce' ); ?>
 		<label class="db-find__label" for="db_email"><?php esc_html_e( 'Email address', 'fenton-digital-badges' ); ?></label>
 		<div class="db-find__row">

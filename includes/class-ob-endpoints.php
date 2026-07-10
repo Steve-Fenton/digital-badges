@@ -290,7 +290,7 @@ final class Ob_Endpoints {
 				'results'     => $results,
 				'error'       => $error,
 				'searched'    => $searched,
-				'form_action' => home_url( '/badges/find/' ),
+				'fenton_digital_badges_form_action' => home_url( '/badges/find/' ),
 			)
 		);
 	}
@@ -300,12 +300,15 @@ final class Ob_Endpoints {
 	 */
 	public static function prevent_caching(): void {
 		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Cache plugin convention (WP Super Cache, W3TC, etc.).
 			define( 'DONOTCACHEPAGE', true );
 		}
 		if ( ! defined( 'DONOTCACHEOBJECT' ) ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Cache plugin convention (WP Super Cache, W3TC, etc.).
 			define( 'DONOTCACHEOBJECT', true );
 		}
 		if ( ! defined( 'DONOTCACHEDB' ) ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Cache plugin convention (WP Super Cache, W3TC, etc.).
 			define( 'DONOTCACHEDB', true );
 		}
 

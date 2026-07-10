@@ -165,13 +165,13 @@ final class Public_Facing {
 			$results  = Ob_Endpoints::process_lookup_request( $error );
 		}
 
-		$form_action = get_permalink();
-		if ( ! is_string( $form_action ) || '' === $form_action ) {
-			$form_action = home_url( '/badges/find/' );
+		$fenton_digital_badges_form_action = get_permalink();
+		if ( ! is_string( $fenton_digital_badges_form_action ) || '' === $fenton_digital_badges_form_action ) {
+			$fenton_digital_badges_form_action = home_url( '/badges/find/' );
 		}
 
 		ob_start();
-		$vars = compact( 'results', 'error', 'searched', 'form_action' );
+		$vars = compact( 'results', 'error', 'searched', 'fenton_digital_badges_form_action' );
 		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- scoped template vars.
 		extract( $vars, EXTR_SKIP );
 		include FENTON_DIGITAL_BADGES_PATH . 'public/views/find.php';

@@ -29,6 +29,8 @@ final class Admin {
 		add_action( 'save_post_db_badge', array( Badge_Class::class, 'save_meta' ) );
 		add_action( 'admin_post_db_issue_badges', array( self::class, 'handle_issue_badges' ) );
 		add_action( 'admin_post_db_revoke_assertion', array( self::class, 'handle_revoke_assertion' ) );
+		add_action( 'admin_post_db_unrevoke_assertion', array( self::class, 'handle_unrevoke_assertion' ) );
+		add_action( 'admin_post_db_delete_assertion', array( self::class, 'handle_delete_assertion' ) );
 	}
 
 	/**
@@ -443,16 +445,24 @@ final class Admin {
 		$result      = Assertion_Repository::list_assertions( $page, 20, $badge_id );
 		$total_pages = (int) ceil( $result['total'] / 20 );
 
-		$revoked = (bool) get_transient( 'db_revoke_notice_' . get_current_user_id() );
-		if ( $revoked ) {
-			delete_transient( 'db_revoke_notice_' . get_current_user_id() );
+		$notice = get_transient( 'db_assertion_notice_' . get_current_user_id() );
+		if ( is_string( $notice ) && '' !== $notice ) {
+			delete_transient( 'db_assertion_notice_' . get_current_user_id() );
+		} else {
+			$notice = '';
 		}
+
+		$notice_messages = array(
+			'revoked'   => __( 'Assertion revoked.', 'fenton-digital-badges' ),
+			'unrevoked' => __( 'Assertion restored.', 'fenton-digital-badges' ),
+			'deleted'   => __( 'Assertion deleted.', 'fenton-digital-badges' ),
+		);
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 
-			<?php if ( $revoked ) : ?>
-				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Assertion revoked.', 'fenton-digital-badges' ); ?></p></div>
+			<?php if ( isset( $notice_messages[ $notice ] ) ) : ?>
+				<div class="notice notice-success is-dismissible"><p><?php echo esc_html( $notice_messages[ $notice ] ); ?></p></div>
 			<?php endif; ?>
 
 			<table class="wp-list-table widefat fixed striped">
@@ -505,6 +515,25 @@ final class Admin {
 												<?php esc_html_e( 'Revoke', 'fenton-digital-badges' ); ?>
 											</button>
 										</form>
+									<?php else : ?>
+										|
+										<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+											<input type="hidden" name="action" value="db_unrevoke_assertion" />
+											<input type="hidden" name="uid" value="<?php echo esc_attr( (string) $row->uid ); ?>" />
+											<?php wp_nonce_field( 'db_unrevoke_assertion_' . $row->uid, 'db_unrevoke_nonce' ); ?>
+											<button type="submit" class="button-link" onclick="return confirm('<?php echo esc_js( __( 'Restore this assertion?', 'fenton-digital-badges' ) ); ?>');">
+												<?php esc_html_e( 'Restore', 'fenton-digital-badges' ); ?>
+											</button>
+										</form>
+										|
+										<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+											<input type="hidden" name="action" value="db_delete_assertion" />
+											<input type="hidden" name="uid" value="<?php echo esc_attr( (string) $row->uid ); ?>" />
+											<?php wp_nonce_field( 'db_delete_assertion_' . $row->uid, 'db_delete_nonce' ); ?>
+											<button type="submit" class="button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Permanently delete this assertion? This cannot be undone.', 'fenton-digital-badges' ) ); ?>');">
+												<?php esc_html_e( 'Delete', 'fenton-digital-badges' ); ?>
+											</button>
+										</form>
 									<?php endif; ?>
 								</td>
 							</tr>
@@ -550,9 +579,52 @@ final class Admin {
 
 		if ( '' !== $uid ) {
 			Assertion_Repository::revoke( $uid, __( 'Revoked by administrator', 'fenton-digital-badges' ) );
-			set_transient( 'db_revoke_notice_' . get_current_user_id(), 1, MINUTE_IN_SECONDS );
+			set_transient( 'db_assertion_notice_' . get_current_user_id(), 'revoked', MINUTE_IN_SECONDS );
 		}
 
+		self::redirect_to_assertions();
+	}
+
+	/**
+	 * Handle assertion un-revoke (restore).
+	 */
+	public static function handle_unrevoke_assertion(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Forbidden.', 'fenton-digital-badges' ) );
+		}
+
+		$uid = isset( $_POST['uid'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['uid'] ) ) : '';
+		check_admin_referer( 'db_unrevoke_assertion_' . $uid, 'db_unrevoke_nonce' );
+
+		if ( '' !== $uid && Assertion_Repository::unrevoke( $uid ) ) {
+			set_transient( 'db_assertion_notice_' . get_current_user_id(), 'unrevoked', MINUTE_IN_SECONDS );
+		}
+
+		self::redirect_to_assertions();
+	}
+
+	/**
+	 * Handle permanent deletion of a revoked assertion.
+	 */
+	public static function handle_delete_assertion(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Forbidden.', 'fenton-digital-badges' ) );
+		}
+
+		$uid = isset( $_POST['uid'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['uid'] ) ) : '';
+		check_admin_referer( 'db_delete_assertion_' . $uid, 'db_delete_nonce' );
+
+		if ( '' !== $uid && Assertion_Repository::delete_revoked( $uid ) ) {
+			set_transient( 'db_assertion_notice_' . get_current_user_id(), 'deleted', MINUTE_IN_SECONDS );
+		}
+
+		self::redirect_to_assertions();
+	}
+
+	/**
+	 * Redirect back to the Assertions admin list.
+	 */
+	private static function redirect_to_assertions(): void {
 		wp_safe_redirect(
 			add_query_arg(
 				array(
