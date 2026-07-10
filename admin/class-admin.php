@@ -2,12 +2,12 @@
 /**
  * Admin-facing functionality.
  *
- * @package DigitalBadges
+ * @package FentonDigitalBadges
  */
 
 declare(strict_types=1);
 
-namespace DigitalBadges;
+namespace FentonDigitalBadges;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -37,28 +37,28 @@ final class Admin {
 	public static function register_menu(): void {
 		add_submenu_page(
 			'edit.php?post_type=db_badge',
-			__( 'Issue Badges', 'digital-badges' ),
-			__( 'Issue Badges', 'digital-badges' ),
+			__( 'Issue Badges', 'fenton-digital-badges' ),
+			__( 'Issue Badges', 'fenton-digital-badges' ),
 			'manage_options',
-			'digital-badges-issue',
+			'fenton-digital-badges-issue',
 			array( self::class, 'render_issue_page' )
 		);
 
 		add_submenu_page(
 			'edit.php?post_type=db_badge',
-			__( 'Assertions', 'digital-badges' ),
-			__( 'Assertions', 'digital-badges' ),
+			__( 'Assertions', 'fenton-digital-badges' ),
+			__( 'Assertions', 'fenton-digital-badges' ),
 			'manage_options',
-			'digital-badges-assertions',
+			'fenton-digital-badges-assertions',
 			array( self::class, 'render_assertions_page' )
 		);
 
 		add_submenu_page(
 			'edit.php?post_type=db_badge',
-			__( 'Settings', 'digital-badges' ),
-			__( 'Settings', 'digital-badges' ),
+			__( 'Settings', 'fenton-digital-badges' ),
+			__( 'Settings', 'fenton-digital-badges' ),
 			'manage_options',
-			'digital-badges-settings',
+			'fenton-digital-badges-settings',
 			array( self::class, 'render_settings_page' )
 		);
 	}
@@ -68,7 +68,7 @@ final class Admin {
 	 */
 	public static function register_settings(): void {
 		register_setting(
-			'digital_badges_issuer_group',
+			'fenton_digital_badges_issuer_group',
 			Issuer::OPTION_KEY,
 			array(
 				'type'              => 'array',
@@ -78,31 +78,31 @@ final class Admin {
 		);
 
 		add_settings_section(
-			'digital_badges_issuer_section',
-			__( 'Issuing organization', 'digital-badges' ),
+			'fenton_digital_badges_issuer_section',
+			__( 'Issuing organization', 'fenton-digital-badges' ),
 			static function (): void {
-				echo '<p>' . esc_html__( 'This organization appears on every Open Badge issued from this site.', 'digital-badges' ) . '</p>';
-				echo '<p>' . esc_html__( 'Issuer JSON:', 'digital-badges' ) . ' <code>' . esc_html( Issuer::json_url() ) . '</code></p>';
+				echo '<p>' . esc_html__( 'This organization appears on every Open Badge issued from this site.', 'fenton-digital-badges' ) . '</p>';
+				echo '<p>' . esc_html__( 'Issuer JSON:', 'fenton-digital-badges' ) . ' <code>' . esc_html( Issuer::json_url() ) . '</code></p>';
 			},
-			'digital-badges-settings'
+			'fenton-digital-badges-settings'
 		);
 
 		$fields = array(
-			'name'                     => __( 'Name', 'digital-badges' ),
-			'url'                      => __( 'Website URL', 'digital-badges' ),
-			'email'                    => __( 'Contact email', 'digital-badges' ),
-			'description'              => __( 'Description', 'digital-badges' ),
-			'image_id'                 => __( 'Logo', 'digital-badges' ),
-			'linkedin_organization_id' => __( 'LinkedIn organization ID', 'digital-badges' ),
+			'name'                     => __( 'Name', 'fenton-digital-badges' ),
+			'url'                      => __( 'Website URL', 'fenton-digital-badges' ),
+			'email'                    => __( 'Contact email', 'fenton-digital-badges' ),
+			'description'              => __( 'Description', 'fenton-digital-badges' ),
+			'image_id'                 => __( 'Logo', 'fenton-digital-badges' ),
+			'linkedin_organization_id' => __( 'LinkedIn organization ID', 'fenton-digital-badges' ),
 		);
 
 		foreach ( $fields as $key => $label ) {
 			add_settings_field(
-				'digital_badges_issuer_' . $key,
+				'fenton_digital_badges_issuer_' . $key,
 				$label,
 				array( self::class, 'render_issuer_field' ),
-				'digital-badges-settings',
-				'digital_badges_issuer_section',
+				'fenton-digital-badges-settings',
+				'fenton_digital_badges_issuer_section',
 				array( 'key' => $key )
 			);
 		}
@@ -145,7 +145,7 @@ final class Admin {
 		);
 
 		if ( 'linkedin_organization_id' === $key ) {
-			echo '<p class="description">' . esc_html__( 'Optional numeric LinkedIn company ID for Add to Profile links.', 'digital-badges' ) . '</p>';
+			echo '<p class="description">' . esc_html__( 'Optional numeric LinkedIn company ID for Add to Profile links.', 'fenton-digital-badges' ) . '</p>';
 		}
 	}
 
@@ -176,13 +176,13 @@ final class Admin {
 			</div>
 			<p class="db-logo-picker__actions">
 				<button type="button" class="button" data-db-logo-select>
-					<?php echo $has_image ? esc_html__( 'Change logo', 'digital-badges' ) : esc_html__( 'Select logo', 'digital-badges' ); ?>
+					<?php echo $has_image ? esc_html__( 'Change logo', 'fenton-digital-badges' ) : esc_html__( 'Select logo', 'fenton-digital-badges' ); ?>
 				</button>
 				<button type="button" class="button-link-delete" data-db-logo-remove <?php echo $has_image ? '' : 'hidden'; ?>>
-					<?php esc_html_e( 'Remove', 'digital-badges' ); ?>
+					<?php esc_html_e( 'Remove', 'fenton-digital-badges' ); ?>
 				</button>
 			</p>
-			<p class="description"><?php esc_html_e( 'Choose an image from the media library for the issuer logo.', 'digital-badges' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Choose an image from the media library for the issuer logo.', 'fenton-digital-badges' ); ?></p>
 		</div>
 		<?php
 	}
@@ -199,20 +199,20 @@ final class Admin {
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 			<form action="options.php" method="post">
 				<?php
-				settings_fields( 'digital_badges_issuer_group' );
-				do_settings_sections( 'digital-badges-settings' );
-				submit_button( __( 'Save issuer', 'digital-badges' ) );
+				settings_fields( 'fenton_digital_badges_issuer_group' );
+				do_settings_sections( 'fenton-digital-badges-settings' );
+				submit_button( __( 'Save issuer', 'fenton-digital-badges' ) );
 				?>
 			</form>
 			<hr />
-			<h2><?php esc_html_e( 'Find badges page', 'digital-badges' ); ?></h2>
+			<h2><?php esc_html_e( 'Find badges page', 'fenton-digital-badges' ); ?></h2>
 			<p>
-				<?php esc_html_e( 'Public lookup URL:', 'digital-badges' ); ?>
-				<code><?php echo esc_html( home_url( '/badges/find/' ) ); ?></code>
+				<?php esc_html_e( 'Public lookup URL:', 'fenton-digital-badges' ); ?>
+				<code><a href="<?php echo esc_url( home_url( '/badges/find/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( home_url( '/badges/find/' ) ); ?></a></code>
 			</p>
 			<p>
-				<?php esc_html_e( 'Or use the shortcode', 'digital-badges' ); ?>
-				<code>[digital_badges_find]</code>
+				<?php esc_html_e( 'Or use the shortcode', 'fenton-digital-badges' ); ?>
+				<code>[fenton_digital_badges_find]</code>
 			</p>
 		</div>
 		<?php
@@ -224,7 +224,7 @@ final class Admin {
 	public static function register_meta_boxes(): void {
 		add_meta_box(
 			'db_badge_ob_meta',
-			__( 'Open Badges', 'digital-badges' ),
+			__( 'Open Badges', 'fenton-digital-badges' ),
 			array( self::class, 'render_badge_meta_box' ),
 			'db_badge',
 			'side',
@@ -246,18 +246,18 @@ final class Admin {
 		$tags     = is_string( $tags ) ? $tags : '';
 		?>
 		<p>
-			<label for="db_criteria_url"><strong><?php esc_html_e( 'Criteria URL', 'digital-badges' ); ?></strong></label><br />
+			<label for="db_criteria_url"><strong><?php esc_html_e( 'Criteria URL', 'fenton-digital-badges' ); ?></strong></label><br />
 			<input type="url" class="widefat" name="db_criteria_url" id="db_criteria_url" value="<?php echo esc_attr( $criteria ); ?>" />
-			<span class="description"><?php esc_html_e( 'Leave blank to use this badge’s permalink.', 'digital-badges' ); ?></span>
+			<span class="description"><?php esc_html_e( 'Leave blank to use this badge’s permalink.', 'fenton-digital-badges' ); ?></span>
 		</p>
 		<p>
-			<label for="db_tags"><strong><?php esc_html_e( 'Tags', 'digital-badges' ); ?></strong></label><br />
+			<label for="db_tags"><strong><?php esc_html_e( 'Tags', 'fenton-digital-badges' ); ?></strong></label><br />
 			<input type="text" class="widefat" name="db_tags" id="db_tags" value="<?php echo esc_attr( $tags ); ?>" />
-			<span class="description"><?php esc_html_e( 'Comma-separated tags.', 'digital-badges' ); ?></span>
+			<span class="description"><?php esc_html_e( 'Comma-separated tags.', 'fenton-digital-badges' ); ?></span>
 		</p>
 		<?php if ( 'publish' === $post->post_status ) : ?>
 			<p>
-				<strong><?php esc_html_e( 'BadgeClass JSON', 'digital-badges' ); ?></strong><br />
+				<strong><?php esc_html_e( 'BadgeClass JSON', 'fenton-digital-badges' ); ?></strong><br />
 				<code style="word-break:break-all;"><?php echo esc_html( Badge_Class::json_url( (int) $post->ID ) ); ?></code>
 			</p>
 		<?php endif; ?>
@@ -282,15 +282,16 @@ final class Admin {
 			)
 		);
 
-		$issued = isset( $_GET['issued'] ) ? absint( $_GET['issued'] ) : 0;
+		$issued = 0;
 		$errors = array();
+		$notice = get_transient( 'db_issue_notice_' . get_current_user_id() );
 
-		if ( isset( $_GET['db_errors'] ) ) {
-			$raw = get_transient( 'db_issue_errors_' . get_current_user_id() );
-			if ( is_array( $raw ) ) {
-				$errors = $raw;
+		if ( is_array( $notice ) ) {
+			$issued = isset( $notice['issued'] ) ? absint( $notice['issued'] ) : 0;
+			if ( isset( $notice['errors'] ) && is_array( $notice['errors'] ) ) {
+				$errors = $notice['errors'];
 			}
-			delete_transient( 'db_issue_errors_' . get_current_user_id() );
+			delete_transient( 'db_issue_notice_' . get_current_user_id() );
 		}
 		?>
 		<div class="wrap">
@@ -301,8 +302,8 @@ final class Admin {
 					<?php
 					printf(
 						/* translators: %s: settings URL */
-						wp_kses_post( __( 'Configure your <a href="%s">issuing organization</a> before issuing badges.', 'digital-badges' ) ),
-						esc_url( admin_url( 'edit.php?post_type=db_badge&page=digital-badges-settings' ) )
+						wp_kses_post( __( 'Configure your <a href="%s">issuing organization</a> before issuing badges.', 'fenton-digital-badges' ) ),
+						esc_url( admin_url( 'edit.php?post_type=db_badge&page=fenton-digital-badges-settings' ) )
 					);
 					?>
 				</p></div>
@@ -313,8 +314,8 @@ final class Admin {
 					<?php
 					printf(
 						/* translators: %d: number of assertions created */
-						esc_html( _n( '%d badge issued.', '%d badges issued.', $issued, 'digital-badges' ) ),
-						$issued
+						esc_html( _n( '%d badge issued.', '%d badges issued.', $issued, 'fenton-digital-badges' ) ),
+						absint( $issued )
 					);
 					?>
 				</p></div>
@@ -322,7 +323,7 @@ final class Admin {
 
 			<?php if ( $errors ) : ?>
 				<div class="notice notice-error">
-					<p><?php esc_html_e( 'Some rows could not be issued:', 'digital-badges' ); ?></p>
+					<p><?php esc_html_e( 'Some rows could not be issued:', 'fenton-digital-badges' ); ?></p>
 					<ul>
 						<?php foreach ( $errors as $error ) : ?>
 							<li><?php echo esc_html( (string) $error ); ?></li>
@@ -337,16 +338,16 @@ final class Admin {
 
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><label for="db_badge_id"><?php esc_html_e( 'Badge', 'digital-badges' ); ?></label></th>
+						<th scope="row"><label for="db_badge_id"><?php esc_html_e( 'Badge', 'fenton-digital-badges' ); ?></label></th>
 						<td>
 							<select name="db_badge_id" id="db_badge_id" required>
-								<option value=""><?php esc_html_e( 'Select a badge…', 'digital-badges' ); ?></option>
+								<option value=""><?php esc_html_e( 'Select a badge…', 'fenton-digital-badges' ); ?></option>
 								<?php foreach ( $badges as $badge ) : ?>
 									<?php
 									$issuable = Badge_Class::is_issuable( (int) $badge->ID );
 									$label    = get_the_title( $badge );
 									if ( ! $issuable ) {
-										$label .= ' ' . __( '(missing image or criteria)', 'digital-badges' );
+										$label .= ' ' . __( '(missing image or criteria)', 'fenton-digital-badges' );
 									}
 									?>
 									<option value="<?php echo esc_attr( (string) $badge->ID ); ?>" <?php disabled( ! $issuable ); ?>>
@@ -357,23 +358,23 @@ final class Admin {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="db_csv_text"><?php esc_html_e( 'CSV data', 'digital-badges' ); ?></label></th>
+						<th scope="row"><label for="db_csv_text"><?php esc_html_e( 'CSV data', 'fenton-digital-badges' ); ?></label></th>
 						<td>
 							<textarea class="large-text code" rows="12" name="db_csv_text" id="db_csv_text" placeholder="email,name,evidence,expires"></textarea>
 							<p class="description">
-								<?php esc_html_e( 'Columns: email (required), name, evidence, expires (YYYY-MM-DD). Header row optional — you can paste email,name on its own. Email addresses are hashed and never stored.', 'digital-badges' ); ?>
+								<?php esc_html_e( 'Columns: email (required), name, evidence, expires (YYYY-MM-DD). Header row optional — you can paste email,name on its own. Email addresses are hashed and never stored.', 'fenton-digital-badges' ); ?>
 							</p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="db_csv_file"><?php esc_html_e( 'Or upload CSV', 'digital-badges' ); ?></label></th>
+						<th scope="row"><label for="db_csv_file"><?php esc_html_e( 'Or upload CSV', 'fenton-digital-badges' ); ?></label></th>
 						<td>
 							<input type="file" name="db_csv_file" id="db_csv_file" accept=".csv,text/csv" />
 						</td>
 					</tr>
 				</table>
 
-				<?php submit_button( __( 'Issue badges', 'digital-badges' ) ); ?>
+				<?php submit_button( __( 'Issue badges', 'fenton-digital-badges' ) ); ?>
 			</form>
 		</div>
 		<?php
@@ -384,39 +385,41 @@ final class Admin {
 	 */
 	public static function handle_issue_badges(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Forbidden.', 'digital-badges' ) );
+			wp_die( esc_html__( 'Forbidden.', 'fenton-digital-badges' ) );
 		}
 
 		check_admin_referer( 'db_issue_badges', 'db_issue_nonce' );
 
 		$badge_id = isset( $_POST['db_badge_id'] ) ? absint( $_POST['db_badge_id'] ) : 0;
-		$csv_text = isset( $_POST['db_csv_text'] ) ? (string) wp_unslash( $_POST['db_csv_text'] ) : '';
+		$csv_text = isset( $_POST['db_csv_text'] ) ? sanitize_textarea_field( wp_unslash( $_POST['db_csv_text'] ) ) : '';
 
-		if ( isset( $_FILES['db_csv_file'] ) && is_array( $_FILES['db_csv_file'] ) ) {
-			$file = $_FILES['db_csv_file'];
-			$error = isset( $file['error'] ) ? (int) $file['error'] : UPLOAD_ERR_NO_FILE;
-			$tmp   = isset( $file['tmp_name'] ) ? (string) $file['tmp_name'] : '';
+		$error = isset( $_FILES['db_csv_file']['error'] ) ? (int) $_FILES['db_csv_file']['error'] : UPLOAD_ERR_NO_FILE;
+		$tmp   = isset( $_FILES['db_csv_file']['tmp_name'] )
+			? sanitize_text_field( wp_unslash( (string) $_FILES['db_csv_file']['tmp_name'] ) )
+			: '';
 
-			if ( UPLOAD_ERR_OK === $error && '' !== $tmp && is_uploaded_file( $tmp ) ) {
-				$contents = file_get_contents( $tmp );
-				if ( is_string( $contents ) && '' !== trim( $contents ) ) {
-					$csv_text = $contents;
-				}
+		if ( UPLOAD_ERR_OK === $error && '' !== $tmp && is_uploaded_file( $tmp ) ) {
+			$contents = file_get_contents( $tmp );
+			if ( is_string( $contents ) && '' !== trim( $contents ) ) {
+				$csv_text = sanitize_textarea_field( $contents );
 			}
 		}
 
 		$result = Csv_Issuer::issue_from_csv( $badge_id, $csv_text );
 
-		if ( $result['errors'] ) {
-			set_transient( 'db_issue_errors_' . get_current_user_id(), $result['errors'], MINUTE_IN_SECONDS );
-		}
+		set_transient(
+			'db_issue_notice_' . get_current_user_id(),
+			array(
+				'issued' => $result['issued'],
+				'errors' => $result['errors'],
+			),
+			MINUTE_IN_SECONDS
+		);
 
 		$redirect = add_query_arg(
 			array(
 				'post_type' => 'db_badge',
-				'page'      => 'digital-badges-issue',
-				'issued'    => $result['issued'],
-				'db_errors' => $result['errors'] ? 1 : 0,
+				'page'      => 'fenton-digital-badges-issue',
 			),
 			admin_url( 'edit.php' )
 		);
@@ -433,34 +436,39 @@ final class Admin {
 			return;
 		}
 
-		$page     = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
-		$badge_id = isset( $_GET['badge_id'] ) ? absint( $_GET['badge_id'] ) : 0;
-		$result   = Assertion_Repository::list_assertions( $page, 20, $badge_id );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list pagination/filter.
+		$page = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list pagination/filter.
+		$badge_id    = isset( $_GET['badge_id'] ) ? absint( $_GET['badge_id'] ) : 0;
+		$result      = Assertion_Repository::list_assertions( $page, 20, $badge_id );
 		$total_pages = (int) ceil( $result['total'] / 20 );
 
-		$revoked = isset( $_GET['revoked'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['revoked'] ) ) : '';
+		$revoked = (bool) get_transient( 'db_revoke_notice_' . get_current_user_id() );
+		if ( $revoked ) {
+			delete_transient( 'db_revoke_notice_' . get_current_user_id() );
+		}
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 
-			<?php if ( '1' === $revoked ) : ?>
-				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Assertion revoked.', 'digital-badges' ); ?></p></div>
+			<?php if ( $revoked ) : ?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Assertion revoked.', 'fenton-digital-badges' ); ?></p></div>
 			<?php endif; ?>
 
 			<table class="wp-list-table widefat fixed striped">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'UID', 'digital-badges' ); ?></th>
-						<th><?php esc_html_e( 'Badge', 'digital-badges' ); ?></th>
-						<th><?php esc_html_e( 'Recipient name', 'digital-badges' ); ?></th>
-						<th><?php esc_html_e( 'Issued', 'digital-badges' ); ?></th>
-						<th><?php esc_html_e( 'Status', 'digital-badges' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'digital-badges' ); ?></th>
+						<th><?php esc_html_e( 'UID', 'fenton-digital-badges' ); ?></th>
+						<th><?php esc_html_e( 'Badge', 'fenton-digital-badges' ); ?></th>
+						<th><?php esc_html_e( 'Recipient name', 'fenton-digital-badges' ); ?></th>
+						<th><?php esc_html_e( 'Issued', 'fenton-digital-badges' ); ?></th>
+						<th><?php esc_html_e( 'Status', 'fenton-digital-badges' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'fenton-digital-badges' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php if ( array() === $result['items'] ) : ?>
-						<tr><td colspan="6"><?php esc_html_e( 'No assertions yet.', 'digital-badges' ); ?></td></tr>
+						<tr><td colspan="6"><?php esc_html_e( 'No assertions yet.', 'fenton-digital-badges' ); ?></td></tr>
 					<?php else : ?>
 						<?php foreach ( $result['items'] as $row ) : ?>
 							<?php
@@ -475,17 +483,17 @@ final class Admin {
 								<td>
 									<?php
 									echo $is_revoked
-										? esc_html__( 'Revoked', 'digital-badges' )
-										: esc_html__( 'Active', 'digital-badges' );
+										? esc_html__( 'Revoked', 'fenton-digital-badges' )
+										: esc_html__( 'Active', 'fenton-digital-badges' );
 									?>
 								</td>
 								<td>
 									<a href="<?php echo esc_url( Assertion_Repository::attestation_url( (string) $row->uid ) ); ?>" target="_blank" rel="noopener noreferrer">
-										<?php esc_html_e( 'View', 'digital-badges' ); ?>
+										<?php esc_html_e( 'View', 'fenton-digital-badges' ); ?>
 									</a>
 									|
 									<a href="<?php echo esc_url( Assertion_Repository::json_url( (string) $row->uid ) ); ?>" target="_blank" rel="noopener noreferrer">
-										<?php esc_html_e( 'JSON', 'digital-badges' ); ?>
+										<?php esc_html_e( 'JSON', 'fenton-digital-badges' ); ?>
 									</a>
 									<?php if ( ! $is_revoked ) : ?>
 										|
@@ -493,8 +501,8 @@ final class Admin {
 											<input type="hidden" name="action" value="db_revoke_assertion" />
 											<input type="hidden" name="uid" value="<?php echo esc_attr( (string) $row->uid ); ?>" />
 											<?php wp_nonce_field( 'db_revoke_assertion_' . $row->uid, 'db_revoke_nonce' ); ?>
-											<button type="submit" class="button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Revoke this assertion?', 'digital-badges' ) ); ?>');">
-												<?php esc_html_e( 'Revoke', 'digital-badges' ); ?>
+											<button type="submit" class="button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Revoke this assertion?', 'fenton-digital-badges' ) ); ?>');">
+												<?php esc_html_e( 'Revoke', 'fenton-digital-badges' ); ?>
 											</button>
 										</form>
 									<?php endif; ?>
@@ -534,22 +542,22 @@ final class Admin {
 	 */
 	public static function handle_revoke_assertion(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Forbidden.', 'digital-badges' ) );
+			wp_die( esc_html__( 'Forbidden.', 'fenton-digital-badges' ) );
 		}
 
 		$uid = isset( $_POST['uid'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['uid'] ) ) : '';
 		check_admin_referer( 'db_revoke_assertion_' . $uid, 'db_revoke_nonce' );
 
 		if ( '' !== $uid ) {
-			Assertion_Repository::revoke( $uid, __( 'Revoked by administrator', 'digital-badges' ) );
+			Assertion_Repository::revoke( $uid, __( 'Revoked by administrator', 'fenton-digital-badges' ) );
+			set_transient( 'db_revoke_notice_' . get_current_user_id(), 1, MINUTE_IN_SECONDS );
 		}
 
 		wp_safe_redirect(
 			add_query_arg(
 				array(
 					'post_type' => 'db_badge',
-					'page'      => 'digital-badges-assertions',
-					'revoked'   => '1',
+					'page'      => 'fenton-digital-badges-assertions',
 				),
 				admin_url( 'edit.php' )
 			)
@@ -566,18 +574,18 @@ final class Admin {
 		$screen = get_current_screen();
 
 		$is_badge_screen = $screen && 'db_badge' === $screen->post_type;
-		$is_plugin_page  = false !== strpos( $hook_suffix, 'digital-badges' );
-		$is_settings     = false !== strpos( $hook_suffix, 'digital-badges-settings' );
+		$is_plugin_page  = false !== strpos( $hook_suffix, 'fenton-digital-badges' );
+		$is_settings     = false !== strpos( $hook_suffix, 'fenton-digital-badges-settings' );
 
 		if ( ! $is_badge_screen && ! $is_plugin_page ) {
 			return;
 		}
 
 		wp_enqueue_style(
-			'digital-badges-admin',
-			DIGITAL_BADGES_URL . 'admin/css/admin.css',
+			'fenton-digital-badges-admin',
+			FENTON_DIGITAL_BADGES_URL . 'admin/css/admin.css',
 			array(),
-			DIGITAL_BADGES_VERSION
+			FENTON_DIGITAL_BADGES_VERSION
 		);
 
 		$script_deps = array();
@@ -588,22 +596,22 @@ final class Admin {
 		}
 
 		wp_enqueue_script(
-			'digital-badges-admin',
-			DIGITAL_BADGES_URL . 'admin/js/admin.js',
+			'fenton-digital-badges-admin',
+			FENTON_DIGITAL_BADGES_URL . 'admin/js/admin.js',
 			$script_deps,
-			DIGITAL_BADGES_VERSION,
+			FENTON_DIGITAL_BADGES_VERSION,
 			true
 		);
 
 		if ( $is_settings ) {
 			wp_localize_script(
-				'digital-badges-admin',
+				'fenton-digital-badges-admin',
 				'digitalBadgesAdmin',
 				array(
-					'selectLogoTitle'  => __( 'Select issuer logo', 'digital-badges' ),
-					'selectLogoButton' => __( 'Use this logo', 'digital-badges' ),
-					'changeLogo'       => __( 'Change logo', 'digital-badges' ),
-					'selectLogo'       => __( 'Select logo', 'digital-badges' ),
+					'selectLogoTitle'  => __( 'Select issuer logo', 'fenton-digital-badges' ),
+					'selectLogoButton' => __( 'Use this logo', 'fenton-digital-badges' ),
+					'changeLogo'       => __( 'Change logo', 'fenton-digital-badges' ),
+					'selectLogo'       => __( 'Select logo', 'fenton-digital-badges' ),
 				)
 			);
 		}

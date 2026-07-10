@@ -2,12 +2,12 @@
 /**
  * Open Badges BadgeClass helpers for db_badge posts.
  *
- * @package DigitalBadges
+ * @package FentonDigitalBadges
  */
 
 declare(strict_types=1);
 
-namespace DigitalBadges;
+namespace FentonDigitalBadges;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

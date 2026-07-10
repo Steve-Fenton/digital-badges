@@ -2,12 +2,12 @@
 /**
  * Bulk CSV badge issuance.
  *
- * @package DigitalBadges
+ * @package FentonDigitalBadges
  */
 
 declare(strict_types=1);
 
-namespace DigitalBadges;
+namespace FentonDigitalBadges;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -32,14 +32,14 @@ final class Csv_Issuer {
 		if ( ! Issuer::is_configured() ) {
 			return array(
 				'issued' => 0,
-				'errors' => array( __( 'Configure the issuing organization in Settings before issuing badges.', 'digital-badges' ) ),
+				'errors' => array( __( 'Configure the issuing organization in Settings before issuing badges.', 'fenton-digital-badges' ) ),
 			);
 		}
 
 		if ( ! Badge_Class::is_issuable( $badge_post_id ) ) {
 			return array(
 				'issued' => 0,
-				'errors' => array( __( 'Select a published badge with a featured image and criteria URL.', 'digital-badges' ) ),
+				'errors' => array( __( 'Select a published badge with a featured image and criteria URL.', 'fenton-digital-badges' ) ),
 			);
 		}
 
@@ -48,7 +48,7 @@ final class Csv_Issuer {
 		if ( array() === $rows ) {
 			return array(
 				'issued' => 0,
-				'errors' => array( __( 'No data rows found in the CSV.', 'digital-badges' ) ),
+				'errors' => array( __( 'No data rows found in the CSV.', 'fenton-digital-badges' ) ),
 			);
 		}
 
@@ -61,7 +61,7 @@ final class Csv_Issuer {
 			if ( ! Identity::is_valid_email( $email ) ) {
 				$errors[] = sprintf(
 					/* translators: %d: CSV line number */
-					__( 'Line %d: invalid or missing email.', 'digital-badges' ),
+					__( 'Line %d: invalid or missing email.', 'fenton-digital-badges' ),
 					$line
 				);
 				continue;
@@ -78,7 +78,7 @@ final class Csv_Issuer {
 			if ( self::expires_is_invalid( $expires_raw ) ) {
 				$errors[] = sprintf(
 					/* translators: %d: CSV line number */
-					__( 'Line %d: invalid expires date (use YYYY-MM-DD).', 'digital-badges' ),
+					__( 'Line %d: invalid expires date (use YYYY-MM-DD).', 'fenton-digital-badges' ),
 					$line
 				);
 				continue;
@@ -104,7 +104,7 @@ final class Csv_Issuer {
 			if ( null === $assertion ) {
 				$errors[] = sprintf(
 					/* translators: %d: CSV line number */
-					__( 'Line %d: failed to create assertion.', 'digital-badges' ),
+					__( 'Line %d: failed to create assertion.', 'fenton-digital-badges' ),
 					$line
 				);
 				continue;
@@ -146,18 +146,17 @@ final class Csv_Issuer {
 			$csv_text = substr( $csv_text, 3 );
 		}
 
-		$stream = fopen( 'php://temp', 'r+' );
+		$lines = preg_split( '/\r\n|\r|\n/', $csv_text );
 
-		if ( false === $stream ) {
+		if ( ! is_array( $lines ) ) {
 			return array();
 		}
 
-		fwrite( $stream, $csv_text );
-		rewind( $stream );
-
 		$raw_rows = array();
 
-		while ( ( $data = fgetcsv( $stream ) ) !== false ) {
+		foreach ( $lines as $line ) {
+			$data = str_getcsv( $line );
+
 			if ( ! is_array( $data ) ) {
 				continue;
 			}
@@ -174,8 +173,6 @@ final class Csv_Issuer {
 				$data
 			);
 		}
-
-		fclose( $stream );
 
 		if ( array() === $raw_rows ) {
 			return array();

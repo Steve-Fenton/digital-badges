@@ -1,21 +1,21 @@
 /**
- * Public styles for Digital Badges.
+ * Public styles for Fenton Digital Badges.
  */
 
-.digital-badge {
+.fenton-digital-badge {
 	display: inline-block;
 	max-width: 220px;
 	text-align: center;
 }
 
-.digital-badge__image {
+.fenton-digital-badge__image {
 	display: block;
 	width: 100%;
 	height: auto;
 	margin: 0 auto 0.5rem;
 }
 
-.digital-badge__title {
+.fenton-digital-badge__title {
 	margin: 0;
 	font-size: 1rem;
 }

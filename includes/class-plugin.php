@@ -2,12 +2,12 @@
 /**
  * Main plugin bootstrap.
  *
- * @package DigitalBadges
+ * @package FentonDigitalBadges
  */
 
 declare(strict_types=1);
 
-namespace DigitalBadges;
+namespace FentonDigitalBadges;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -48,23 +48,22 @@ final class Plugin {
 	 * Load dependencies.
 	 */
 	private function includes(): void {
-		require_once DIGITAL_BADGES_PATH . 'includes/class-post-types.php';
-		require_once DIGITAL_BADGES_PATH . 'includes/class-identity.php';
-		require_once DIGITAL_BADGES_PATH . 'includes/class-issuer.php';
-		require_once DIGITAL_BADGES_PATH . 'includes/class-badge-class.php';
-		require_once DIGITAL_BADGES_PATH . 'includes/class-assertion-repository.php';
-		require_once DIGITAL_BADGES_PATH . 'includes/class-csv-issuer.php';
-		require_once DIGITAL_BADGES_PATH . 'includes/class-linkedin.php';
-		require_once DIGITAL_BADGES_PATH . 'includes/class-ob-endpoints.php';
-		require_once DIGITAL_BADGES_PATH . 'admin/class-admin.php';
-		require_once DIGITAL_BADGES_PATH . 'public/class-public.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-post-types.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-identity.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-issuer.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-badge-class.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-assertion-repository.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-csv-issuer.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-linkedin.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-ob-endpoints.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'admin/class-admin.php';
+		require_once FENTON_DIGITAL_BADGES_PATH . 'public/class-public.php';
 	}
 
 	/**
 	 * Register hooks.
 	 */
 	private function hooks(): void {
-		add_action( 'init', array( $this, 'load_textdomain' ) );
 		add_action( 'init', array( Post_Types::class, 'register' ) );
 		add_action( 'init', array( $this, 'maybe_upgrade_schema' ) );
 
@@ -81,9 +80,9 @@ final class Plugin {
 	 * Ensure DB table and lookup secret exist after updates.
 	 */
 	public function maybe_upgrade_schema(): void {
-		$db_version = get_option( 'digital_badges_db_version', '' );
+		$db_version = get_option( 'fenton_digital_badges_db_version', '' );
 
-		if ( DIGITAL_BADGES_VERSION === $db_version ) {
+		if ( FENTON_DIGITAL_BADGES_VERSION === $db_version ) {
 			return;
 		}
 
@@ -91,17 +90,6 @@ final class Plugin {
 		Identity::ensure_secret();
 		Ob_Endpoints::add_rewrite_rules();
 		flush_rewrite_rules( false );
-		update_option( 'digital_badges_db_version', DIGITAL_BADGES_VERSION, false );
-	}
-
-	/**
-	 * Load plugin translations.
-	 */
-	public function load_textdomain(): void {
-		load_plugin_textdomain(
-			'digital-badges',
-			false,
-			dirname( plugin_basename( DIGITAL_BADGES_FILE ) ) . '/languages'
-		);
+		update_option( 'fenton_digital_badges_db_version', FENTON_DIGITAL_BADGES_VERSION, false );
 	}
 }

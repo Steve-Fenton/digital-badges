@@ -2,12 +2,12 @@
 /**
  * Site-wide Open Badges issuer organization.
  *
- * @package DigitalBadges
+ * @package FentonDigitalBadges
  */
 
 declare(strict_types=1);
 
-namespace DigitalBadges;
+namespace FentonDigitalBadges;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Issuer {
 
-	public const OPTION_KEY = 'digital_badges_issuer';
+	public const OPTION_KEY = 'fenton_digital_badges_issuer';
 
 	/**
 	 * Default issuer option values.

@@ -1,5 +1,5 @@
 /**
- * Digital Badges — admin scripts.
+ * Fenton Digital Badges — admin scripts.
  */
 (function ($) {
 	'use strict';

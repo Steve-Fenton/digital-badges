@@ -2,12 +2,12 @@
 /**
  * Public-facing functionality.
  *
- * @package DigitalBadges
+ * @package FentonDigitalBadges
  */
 
 declare(strict_types=1);
 
-namespace DigitalBadges;
+namespace FentonDigitalBadges;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -24,8 +24,8 @@ final class Public_Facing {
 	public static function init(): void {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_action( 'wp_head', array( self::class, 'maybe_output_og_tags' ), 5 );
-		add_shortcode( 'digital_badge', array( self::class, 'render_badge_shortcode' ) );
-		add_shortcode( 'digital_badges_find', array( self::class, 'render_find_shortcode' ) );
+		add_shortcode( 'fenton_digital_badge', array( self::class, 'render_badge_shortcode' ) );
+		add_shortcode( 'fenton_digital_badges_find', array( self::class, 'render_find_shortcode' ) );
 	}
 
 	/**
@@ -33,17 +33,17 @@ final class Public_Facing {
 	 */
 	public static function enqueue_assets(): void {
 		wp_enqueue_style(
-			'digital-badges-public',
-			DIGITAL_BADGES_URL . 'public/css/public.css',
+			'fenton-digital-badges-public',
+			FENTON_DIGITAL_BADGES_URL . 'public/css/public.css',
 			array(),
-			DIGITAL_BADGES_VERSION
+			FENTON_DIGITAL_BADGES_VERSION
 		);
 
 		wp_enqueue_script(
-			'digital-badges-public',
-			DIGITAL_BADGES_URL . 'public/js/public.js',
+			'fenton-digital-badges-public',
+			FENTON_DIGITAL_BADGES_URL . 'public/js/public.js',
 			array(),
-			DIGITAL_BADGES_VERSION,
+			FENTON_DIGITAL_BADGES_VERSION,
 			true
 		);
 	}
@@ -87,7 +87,7 @@ final class Public_Facing {
 	}
 
 	/**
-	 * Shortcode: [digital_badge id="123"]
+	 * Shortcode: [fenton_digital_badge id="123"]
 	 *
 	 * @param array<string, string>|string $atts Shortcode attributes.
 	 */
@@ -97,7 +97,7 @@ final class Public_Facing {
 				'id' => 0,
 			),
 			$atts,
-			'digital_badge'
+			'fenton_digital_badge'
 		);
 
 		$badge_id = absint( $atts['id'] );
@@ -113,27 +113,31 @@ final class Public_Facing {
 		}
 
 		$image = Badge_Class::image_url( $badge_id );
-		$html  = '<div class="digital-badge" data-badge-id="' . esc_attr( (string) $badge_id ) . '">';
+		$html  = '<div class="fenton-digital-badge" data-badge-id="' . esc_attr( (string) $badge_id ) . '">';
 
 		if ( '' !== $image ) {
-			$html .= '<img class="digital-badge__image" src="' . esc_url( $image ) . '" alt="' . esc_attr( get_the_title( $badge ) ) . '" />';
+			$html .= '<img class="fenton-digital-badge__image" src="' . esc_url( $image ) . '" alt="' . esc_attr( get_the_title( $badge ) ) . '" />';
 		}
 
-		$html .= '<h3 class="digital-badge__title">' . esc_html( get_the_title( $badge ) ) . '</h3>';
+		$html .= '<h3 class="fenton-digital-badge__title">' . esc_html( get_the_title( $badge ) ) . '</h3>';
 		$html .= '</div>';
 
 		return $html;
 	}
 
 	/**
-	 * Shortcode: [digital_badges_find]
+	 * Shortcode: [fenton_digital_badges_find]
 	 */
 	public static function render_find_shortcode(): string {
 		$results  = array();
 		$error    = '';
 		$searched = false;
 
-		if ( 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? '' ) && isset( $_POST['db_find_nonce'] ) ) {
+		$request_method = isset( $_SERVER['REQUEST_METHOD'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) )
+			: '';
+
+		if ( 'POST' === $request_method ) {
 			$searched = true;
 			$results  = Ob_Endpoints::process_lookup_request( $error );
 		}
@@ -142,7 +146,7 @@ final class Public_Facing {
 		$vars = compact( 'results', 'error', 'searched' );
 		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- scoped template vars.
 		extract( $vars, EXTR_SKIP );
-		include DIGITAL_BADGES_PATH . 'public/views/find.php';
+		include FENTON_DIGITAL_BADGES_PATH . 'public/views/find.php';
 
 		return (string) ob_get_clean();
 	}

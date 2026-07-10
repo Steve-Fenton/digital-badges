@@ -2,12 +2,12 @@
 /**
  * Persistence for Open Badges assertions.
  *
- * @package DigitalBadges
+ * @package FentonDigitalBadges
  */
 
 declare(strict_types=1);
 
-namespace DigitalBadges;
+namespace FentonDigitalBadges;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,7 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * CRUD and lookup for the assertions custom table.
+ *
+ * Direct $wpdb access is required; there is no WordPress API for this table.
  */
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom assertions table.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom assertions table.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom assertions table.
 final class Assertion_Repository {
 
 	public const TABLE_SUFFIX = 'db_assertions';
@@ -70,9 +75,7 @@ final class Assertion_Repository {
 	public static function drop_table(): void {
 		global $wpdb;
 
-		$table = self::table_name();
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-		$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', self::table_name() ) );
 	}
 
 	/**
@@ -141,11 +144,10 @@ final class Assertion_Repository {
 	public static function find_by_uid( string $uid ): ?object {
 		global $wpdb;
 
-		$table = self::table_name();
-		$row   = $wpdb->get_row(
+		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-				"SELECT * FROM {$table} WHERE uid = %s LIMIT 1",
+				'SELECT * FROM %i WHERE uid = %s LIMIT 1',
+				self::table_name(),
 				$uid
 			)
 		);
@@ -161,11 +163,10 @@ final class Assertion_Repository {
 	public static function find_by_lookup( string $lookup_hash ): array {
 		global $wpdb;
 
-		$table = self::table_name();
-		$rows  = $wpdb->get_results(
+		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-				"SELECT * FROM {$table} WHERE recipient_lookup = %s AND revoked = 0 ORDER BY issued_on DESC",
+				'SELECT * FROM %i WHERE recipient_lookup = %s AND revoked = 0 ORDER BY issued_on DESC',
+				self::table_name(),
 				$lookup_hash
 			)
 		);
@@ -192,35 +193,39 @@ final class Assertion_Repository {
 	public static function list_assertions( int $page = 1, int $per_page = 20, int $badge_post_id = 0 ): array {
 		global $wpdb;
 
-		$table   = self::table_name();
-		$page    = max( 1, $page );
+		$table    = self::table_name();
+		$page     = max( 1, $page );
 		$per_page = max( 1, min( 100, $per_page ) );
-		$offset  = ( $page - 1 ) * $per_page;
-
-		$where  = '1=1';
-		$params = array();
+		$offset   = ( $page - 1 ) * $per_page;
 
 		if ( $badge_post_id > 0 ) {
-			$where   .= ' AND badge_post_id = %d';
-			$params[] = $badge_post_id;
-		}
-
-		$count_sql = "SELECT COUNT(*) FROM {$table} WHERE {$where}";
-		$list_sql  = "SELECT * FROM {$table} WHERE {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d";
-
-		if ( $params ) {
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- prepared below.
-			$total = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, ...$params ) );
-			$list_params = array_merge( $params, array( $per_page, $offset ) );
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- prepared below.
-			$rows = $wpdb->get_results( $wpdb->prepare( $list_sql, ...$list_params ) );
-		} else {
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-			$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
-			$rows  = $wpdb->get_results(
+			$total = (int) $wpdb->get_var(
 				$wpdb->prepare(
-					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is internal.
-					"SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d OFFSET %d",
+					'SELECT COUNT(*) FROM %i WHERE badge_post_id = %d',
+					$table,
+					$badge_post_id
+				)
+			);
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE badge_post_id = %d ORDER BY created_at DESC LIMIT %d OFFSET %d',
+					$table,
+					$badge_post_id,
+					$per_page,
+					$offset
+				)
+			);
+		} else {
+			$total = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT COUNT(*) FROM %i',
+					$table
+				)
+			);
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i ORDER BY created_at DESC LIMIT %d OFFSET %d',
+					$table,
 					$per_page,
 					$offset
 				)

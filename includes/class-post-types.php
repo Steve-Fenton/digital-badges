@@ -2,12 +2,12 @@
 /**
  * Custom post types and taxonomies.
  *
- * @package DigitalBadges
+ * @package FentonDigitalBadges
  */
 
 declare(strict_types=1);
 
-namespace DigitalBadges;
+namespace FentonDigitalBadges;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -26,13 +26,13 @@ final class Post_Types {
 			'db_badge',
 			array(
 				'labels'              => array(
-					'name'          => __( 'Badges', 'digital-badges' ),
-					'singular_name' => __( 'Badge', 'digital-badges' ),
-					'add_new_item'  => __( 'Add New Badge', 'digital-badges' ),
-					'edit_item'     => __( 'Edit Badge', 'digital-badges' ),
-					'view_item'     => __( 'View Badge', 'digital-badges' ),
-					'search_items'  => __( 'Search Badges', 'digital-badges' ),
-					'not_found'     => __( 'No badges found.', 'digital-badges' ),
+					'name'          => __( 'Badges', 'fenton-digital-badges' ),
+					'singular_name' => __( 'Badge', 'fenton-digital-badges' ),
+					'add_new_item'  => __( 'Add New Badge', 'fenton-digital-badges' ),
+					'edit_item'     => __( 'Edit Badge', 'fenton-digital-badges' ),
+					'view_item'     => __( 'View Badge', 'fenton-digital-badges' ),
+					'search_items'  => __( 'Search Badges', 'fenton-digital-badges' ),
+					'not_found'     => __( 'No badges found.', 'fenton-digital-badges' ),
 				),
 				'public'              => true,
 				'has_archive'         => true,

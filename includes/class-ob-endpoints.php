@@ -2,12 +2,12 @@
 /**
  * Public Open Badges JSON endpoints and human pages.
  *
- * @package DigitalBadges
+ * @package FentonDigitalBadges
  */
 
 declare(strict_types=1);
 
-namespace DigitalBadges;
+namespace FentonDigitalBadges;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -41,8 +41,8 @@ final class Ob_Endpoints {
 			return $classes;
 		}
 
-		$classes[] = 'digital-badges';
-		$classes[] = 'digital-badges--' . sanitize_html_class( $type );
+		$classes[] = 'fenton-digital-badges';
+		$classes[] = 'fenton-digital-badges--' . sanitize_html_class( $type );
 
 		return $classes;
 	}
@@ -217,7 +217,7 @@ final class Ob_Endpoints {
 				'assertion_json'  => $assertion_json,
 				'share_text'      => sprintf(
 					/* translators: 1: badge name, 2: issuer name */
-					__( 'I earned the %1$s badge from %2$s', 'digital-badges' ),
+					__( 'I earned the %1$s badge from %2$s', 'fenton-digital-badges' ),
 					get_the_title( $badge ),
 					$issuer['name'] !== '' ? $issuer['name'] : get_bloginfo( 'name' )
 				),
@@ -236,7 +236,7 @@ final class Ob_Endpoints {
 			status_header( 404 );
 			nocache_headers();
 			header( 'Content-Type: text/html; charset=utf-8' );
-			echo esc_html__( 'Badge not found.', 'digital-badges' );
+			echo esc_html__( 'Badge not found.', 'fenton-digital-badges' );
 			exit;
 		}
 
@@ -246,7 +246,7 @@ final class Ob_Endpoints {
 			status_header( 404 );
 			nocache_headers();
 			header( 'Content-Type: text/html; charset=utf-8' );
-			echo esc_html__( 'Badge not found.', 'digital-badges' );
+			echo esc_html__( 'Badge not found.', 'fenton-digital-badges' );
 			exit;
 		}
 
@@ -273,7 +273,11 @@ final class Ob_Endpoints {
 		$error   = '';
 		$searched = false;
 
-		if ( 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+		$request_method = isset( $_SERVER['REQUEST_METHOD'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) )
+			: '';
+
+		if ( 'POST' === $request_method ) {
 			$searched = true;
 			$results  = self::process_lookup_request( $error );
 		}
@@ -300,14 +304,14 @@ final class Ob_Endpoints {
 		$nonce = isset( $_POST['db_find_nonce'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['db_find_nonce'] ) ) : '';
 
 		if ( ! wp_verify_nonce( $nonce, 'db_find_badges' ) ) {
-			$error = __( 'Invalid request. Please try again.', 'digital-badges' );
+			$error = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
 			return array();
 		}
 
 		$email = isset( $_POST['db_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['db_email'] ) ) : '';
 
 		if ( ! Identity::is_valid_email( $email ) ) {
-			$error = __( 'Please enter a valid email address.', 'digital-badges' );
+			$error = __( 'Please enter a valid email address.', 'fenton-digital-badges' );
 			return array();
 		}
 
@@ -317,7 +321,7 @@ final class Ob_Endpoints {
 		$hits = (int) get_transient( $key );
 
 		if ( $hits >= 20 ) {
-			$error = __( 'Too many lookups. Please wait a few minutes and try again.', 'digital-badges' );
+			$error = __( 'Too many lookups. Please wait a few minutes and try again.', 'fenton-digital-badges' );
 			return array();
 		}
 
@@ -338,7 +342,7 @@ final class Ob_Endpoints {
 	 * @param bool                 $use_theme_chrome Whether to wrap with get_header/footer.
 	 */
 	private static function render_view( string $view, array $vars, bool $use_theme_chrome = true ): void {
-		$path = DIGITAL_BADGES_PATH . 'public/views/' . $view . '.php';
+		$path = FENTON_DIGITAL_BADGES_PATH . 'public/views/' . $view . '.php';
 
 		if ( ! is_readable( $path ) ) {
 			status_header( 500 );
@@ -372,22 +376,14 @@ final class Ob_Endpoints {
 	 * Print public CSS for attestation/find pages.
 	 */
 	public static function print_public_styles(): void {
-		$href = DIGITAL_BADGES_URL . 'public/css/public.css?ver=' . rawurlencode( DIGITAL_BADGES_VERSION );
-		printf(
-			"<link rel='stylesheet' id='digital-badges-public-css' href='%s' media='all' />\n",
-			esc_url( $href )
-		);
+		wp_print_styles( 'fenton-digital-badges-public' );
 	}
 
 	/**
 	 * Print public JS for attestation/find pages.
 	 */
 	public static function print_public_scripts(): void {
-		$src = DIGITAL_BADGES_URL . 'public/js/public.js?ver=' . rawurlencode( DIGITAL_BADGES_VERSION );
-		printf(
-			"<script id='digital-badges-public-js' src='%s'></script>\n",
-			esc_url( $src )
-		);
+		wp_print_scripts( 'fenton-digital-badges-public' );
 	}
 
 	/**
@@ -428,7 +424,7 @@ final class Ob_Endpoints {
 		if ( isset( $vars['badge'] ) && $vars['badge'] instanceof \WP_Post ) {
 			$title = get_the_title( $vars['badge'] );
 		} elseif ( 'find' === $view ) {
-			$title = __( 'Find your badges', 'digital-badges' );
+			$title = __( 'Find your badges', 'fenton-digital-badges' );
 			$canonical = home_url( '/badges/find/' );
 		}
 
