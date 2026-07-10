@@ -269,8 +269,10 @@ final class Ob_Endpoints {
 	 * Serve find-badges page (also used by shortcode via Public_Facing).
 	 */
 	private static function serve_find_page(): void {
-		$results = array();
-		$error   = '';
+		self::prevent_caching();
+
+		$results  = array();
+		$error    = '';
 		$searched = false;
 
 		$request_method = isset( $_SERVER['REQUEST_METHOD'] )
@@ -285,11 +287,29 @@ final class Ob_Endpoints {
 		self::render_view(
 			'find',
 			array(
-				'results'  => $results,
-				'error'    => $error,
-				'searched' => $searched,
+				'results'     => $results,
+				'error'       => $error,
+				'searched'    => $searched,
+				'form_action' => home_url( '/badges/find/' ),
 			)
 		);
+	}
+
+	/**
+	 * Prevent page caches from storing nonce-bearing find forms.
+	 */
+	public static function prevent_caching(): void {
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		if ( ! defined( 'DONOTCACHEOBJECT' ) ) {
+			define( 'DONOTCACHEOBJECT', true );
+		}
+		if ( ! defined( 'DONOTCACHEDB' ) ) {
+			define( 'DONOTCACHEDB', true );
+		}
+
+		nocache_headers();
 	}
 
 	/**

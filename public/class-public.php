@@ -22,10 +22,31 @@ final class Public_Facing {
 	 * Wire public hooks.
 	 */
 	public static function init(): void {
+		add_action( 'template_redirect', array( self::class, 'maybe_prevent_find_cache' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_action( 'wp_head', array( self::class, 'maybe_output_og_tags' ), 5 );
 		add_shortcode( 'fenton_digital_badge', array( self::class, 'render_badge_shortcode' ) );
 		add_shortcode( 'fenton_digital_badges_find', array( self::class, 'render_find_shortcode' ) );
+	}
+
+	/**
+	 * Avoid caching pages that embed the find-badges form (nonce must stay fresh).
+	 */
+	public static function maybe_prevent_find_cache(): void {
+		if ( ! is_singular() ) {
+			return;
+		}
+
+		$post = get_post();
+		if ( ! $post instanceof \WP_Post ) {
+			return;
+		}
+
+		if ( ! has_shortcode( $post->post_content, 'fenton_digital_badges_find' ) ) {
+			return;
+		}
+
+		Ob_Endpoints::prevent_caching();
 	}
 
 	/**
@@ -129,6 +150,8 @@ final class Public_Facing {
 	 * Shortcode: [fenton_digital_badges_find]
 	 */
 	public static function render_find_shortcode(): string {
+		Ob_Endpoints::prevent_caching();
+
 		$results  = array();
 		$error    = '';
 		$searched = false;
@@ -142,8 +165,13 @@ final class Public_Facing {
 			$results  = Ob_Endpoints::process_lookup_request( $error );
 		}
 
+		$form_action = get_permalink();
+		if ( ! is_string( $form_action ) || '' === $form_action ) {
+			$form_action = home_url( '/badges/find/' );
+		}
+
 		ob_start();
-		$vars = compact( 'results', 'error', 'searched' );
+		$vars = compact( 'results', 'error', 'searched', 'form_action' );
 		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- scoped template vars.
 		extract( $vars, EXTR_SKIP );
 		include FENTON_DIGITAL_BADGES_PATH . 'public/views/find.php';
