@@ -22,24 +22,30 @@ final class Csv_Issuer {
 	 * Issue badges from CSV text.
 	 *
 	 * Expected columns: email (required), name, evidence, expires.
+	 * Skips emails that already have a non-revoked assertion for this badge
+	 * (matched by email lookup hash), including duplicates within the same CSV.
 	 *
-	 * @return array{issued: int, errors: list<string>}
+	 * @return array{issued: int, skipped: int, errors: list<string>}
 	 */
 	public static function issue_from_csv( int $badge_post_id, string $csv_text ): array {
-		$issued = 0;
-		$errors = array();
+		$issued  = 0;
+		$skipped = 0;
+		$errors  = array();
+		$seen    = array();
 
 		if ( ! Issuer::is_configured() ) {
 			return array(
-				'issued' => 0,
-				'errors' => array( __( 'Configure the issuing organization in Settings before issuing badges.', 'fenton-digital-badges' ) ),
+				'issued'  => 0,
+				'skipped' => 0,
+				'errors'  => array( __( 'Configure the issuing organization in Settings before issuing badges.', 'fenton-digital-badges' ) ),
 			);
 		}
 
 		if ( ! Badge_Class::is_issuable( $badge_post_id ) ) {
 			return array(
-				'issued' => 0,
-				'errors' => array( __( 'Select a published badge with a featured image and criteria URL.', 'fenton-digital-badges' ) ),
+				'issued'  => 0,
+				'skipped' => 0,
+				'errors'  => array( __( 'Select a published badge with a featured image and criteria URL.', 'fenton-digital-badges' ) ),
 			);
 		}
 
@@ -47,8 +53,9 @@ final class Csv_Issuer {
 
 		if ( array() === $rows ) {
 			return array(
-				'issued' => 0,
-				'errors' => array( __( 'No data rows found in the CSV.', 'fenton-digital-badges' ) ),
+				'issued'  => 0,
+				'skipped' => 0,
+				'errors'  => array( __( 'No data rows found in the CSV.', 'fenton-digital-badges' ) ),
 			);
 		}
 
@@ -67,9 +74,16 @@ final class Csv_Issuer {
 				continue;
 			}
 
+			$lookup = Identity::lookup_hash( $email );
+
+			if ( isset( $seen[ $lookup ] ) || Assertion_Repository::exists_for_badge_and_lookup( $badge_post_id, $lookup ) ) {
+				++$skipped;
+				unset( $email, $lookup );
+				continue;
+			}
+
 			$salt     = Identity::generate_salt();
 			$identity = Identity::open_badges_identity( $email, $salt );
-			$lookup   = Identity::lookup_hash( $email );
 
 			$name     = isset( $row['name'] ) ? sanitize_text_field( (string) $row['name'] ) : '';
 			$evidence = isset( $row['evidence'] ) ? esc_url_raw( (string) $row['evidence'] ) : '';
@@ -99,7 +113,7 @@ final class Csv_Issuer {
 			);
 
 			// Email discarded; only hashes remain in $assertion / DB.
-			unset( $email, $identity, $lookup, $salt );
+			unset( $email, $identity, $salt );
 
 			if ( null === $assertion ) {
 				$errors[] = sprintf(
@@ -110,12 +124,15 @@ final class Csv_Issuer {
 				continue;
 			}
 
+			$seen[ $lookup ] = true;
+			unset( $lookup );
 			++$issued;
 		}
 
 		return array(
-			'issued' => $issued,
-			'errors' => $errors,
+			'issued'  => $issued,
+			'skipped' => $skipped,
+			'errors'  => $errors,
 		);
 	}
 

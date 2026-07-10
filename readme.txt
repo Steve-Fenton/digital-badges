@@ -4,7 +4,7 @@ Tags: badges, open badges, credentials, certificates, linkedin
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.11
+Stable tag: 0.1.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,9 +21,16 @@ Fenton Digital Badges lets you issue [Open Badges 1.0](https://github.com/mozill
 * Issue badges in bulk from CSV (email required; name, evidence, and expiry optional)
 * Public Open Badges JSON endpoints for issuer, badge class, and assertion
 * Public attestation pages with share, embed, download, and LinkedIn Add to Profile
-* Email lookup so earners can find badges issued to them
+* Email lookup so earners can request links to badges issued to them (avoids revealing whether an address has badges)
 * Assertions list with revoke, restore, and delete (revoked only)
 * Recipient emails are salted/hashed — plaintext emails are never stored
+
+You can add templates for the badge pages using `/wp-admin/site-editor.php?p=%2Ftemplate` on your site.
+
+* Click "Add Template"
+* Select "Single item: Badge" or "Archive: Badge"
+
+To control the layout of `/badges/find/`, create a Page, optionally add `[fenton_digital_badges_find]`, then choose that page under **Badges → Settings → Find badges page**. Edit the page’s template in the Site Editor. Themes can also override the form markup with `fenton-digital-badges/find.php`.
 
 **Shortcodes**
 
@@ -36,6 +43,7 @@ Fenton Digital Badges lets you issue [Open Badges 1.0](https://github.com/mozill
 * Badge class JSON: `/ob/badges/{id}.json`
 * Assertion JSON: `/ob/assertions/{uid}.json`
 * Attestation page: `/badges/assertion/{uid}/`
+* Find badges: `/badges/find/`
 * Embed: `/badges/embed/{uid}/`
 
 == Installation ==
@@ -55,6 +63,10 @@ Columns: `email` (required), `name`, `evidence`, `expires` (YYYY-MM-DD). A heade
 = Are recipient emails stored? =
 
 No. Emails are salted and hashed for the assertion identity and looked up via a separate HMAC. Plaintext emails are never stored.
+
+= How does the find badges form work? =
+
+Enter the email used when the badge was issued. The form always shows the same confirmation message so it does not reveal whether an address has badges. If matches exist, attestation URLs are emailed to that address.
 
 = What happens if a recipient name is omitted? =
 

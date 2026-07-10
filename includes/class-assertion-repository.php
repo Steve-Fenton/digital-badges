@@ -186,6 +186,24 @@ final class Assertion_Repository {
 	}
 
 	/**
+	 * Whether a non-revoked assertion already exists for this badge and recipient lookup hash.
+	 */
+	public static function exists_for_badge_and_lookup( int $badge_post_id, string $lookup_hash ): bool {
+		global $wpdb;
+
+		$count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT COUNT(*) FROM %i WHERE badge_post_id = %d AND recipient_lookup = %s AND revoked = 0',
+				self::table_name(),
+				$badge_post_id,
+				$lookup_hash
+			)
+		);
+
+		return $count > 0;
+	}
+
+	/**
 	 * Paginated assertion list for admin.
 	 *
 	 * @return array{items: list<object>, total: int}

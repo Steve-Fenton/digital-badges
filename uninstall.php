@@ -14,6 +14,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 global $wpdb;
 
 delete_option( 'fenton_digital_badges_issuer' );
+delete_option( 'fenton_digital_badges_find_page_id' );
 delete_option( 'fenton_digital_badges_lookup_secret' );
 delete_option( 'fenton_digital_badges_db_version' );
 

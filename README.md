@@ -45,15 +45,17 @@ flowchart LR
 | Issuer | `/ob/issuer.json` |
 | BadgeClass | `/ob/badges/{id}.json` |
 | Assertion | `/ob/assertions/{uid}.json` |
-| Find badges | `/badges/find/` or `[fenton_digital_badges_find]` |
+| Find badges | `/badges/find/` or `[fenton_digital_badges_find]` (optional page template via **Badges → Settings**) |
 | Attestation | `/badges/assertion/{uid}/` |
 | Embed | `/badges/embed/{uid}/` |
+
+Theme overrides for plugin views: `fenton-digital-badges/{view}.php` (e.g. `find.php`, `attestation.php`).
 
 ## Issuing
 
 CSV columns: `email` (required), `name`, `evidence`, `expires` (YYYY-MM-DD). A header row is optional — a single line like `you@example.com,Your Name` works.
 
-Email addresses are salted/hashed for the assertion identity and looked up via a separate HMAC. Plaintext emails are never stored.
+Email addresses are salted/hashed for the assertion identity and looked up via a separate HMAC. Plaintext emails are never stored. The public find form always shows the same confirmation message; when matches exist, attestation URLs are emailed to the address.
 
 ## Structure
 

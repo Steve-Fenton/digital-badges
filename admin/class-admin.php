@@ -79,6 +79,16 @@ final class Admin {
 			)
 		);
 
+		register_setting(
+			'fenton_digital_badges_find_group',
+			Public_Facing::FIND_PAGE_OPTION,
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => array( self::class, 'sanitize_find_page_id' ),
+				'default'           => 0,
+			)
+		);
+
 		add_settings_section(
 			'fenton_digital_badges_issuer_section',
 			__( 'Issuing organization', 'fenton-digital-badges' ),
@@ -87,6 +97,16 @@ final class Admin {
 				echo '<p>' . esc_html__( 'Issuer JSON:', 'fenton-digital-badges' ) . ' <code>' . esc_html( Issuer::json_url() ) . '</code></p>';
 			},
 			'fenton-digital-badges-settings'
+		);
+
+		add_settings_section(
+			'fenton_digital_badges_find_section',
+			__( 'Find badges page', 'fenton-digital-badges' ),
+			static function (): void {
+				echo '<p>' . esc_html__( 'Optionally choose a WordPress page to supply the layout for /badges/find/. Edit that page’s template in the Site Editor to control header, spacing, and chrome. The lookup form is added automatically if the page does not already include the shortcode.', 'fenton-digital-badges' ) . '</p>';
+				echo '<p>' . esc_html__( 'Public lookup URL:', 'fenton-digital-badges' ) . ' <code><a href="' . esc_url( home_url( '/badges/find/' ) ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( home_url( '/badges/find/' ) ) . '</a></code></p>';
+			},
+			'fenton-digital-badges-find'
 		);
 
 		$fields = array(
@@ -108,6 +128,54 @@ final class Admin {
 				array( 'key' => $key )
 			);
 		}
+
+		add_settings_field(
+			'fenton_digital_badges_find_page',
+			__( 'Page template', 'fenton-digital-badges' ),
+			array( self::class, 'render_find_page_field' ),
+			'fenton-digital-badges-find',
+			'fenton_digital_badges_find_section'
+		);
+	}
+
+	/**
+	 * Sanitize the Find badges page ID.
+	 *
+	 * @param mixed $value Raw option value.
+	 */
+	public static function sanitize_find_page_id( $value ): int {
+		$page_id = absint( $value );
+
+		if ( $page_id <= 0 ) {
+			return 0;
+		}
+
+		$page = get_post( $page_id );
+
+		if ( ! $page instanceof \WP_Post || 'page' !== $page->post_type ) {
+			return 0;
+		}
+
+		return $page_id;
+	}
+
+	/**
+	 * Render the Find badges page dropdown.
+	 */
+	public static function render_find_page_field(): void {
+		$selected = absint( get_option( Public_Facing::FIND_PAGE_OPTION, 0 ) );
+
+		wp_dropdown_pages(
+			array(
+				'name'              => Public_Facing::FIND_PAGE_OPTION,
+				'id'                => Public_Facing::FIND_PAGE_OPTION,
+				'selected'          => $selected,
+				'show_option_none'  => __( '— Plugin default —', 'fenton-digital-badges' ),
+				'option_none_value' => '0',
+			)
+		);
+
+		echo '<p class="description">' . esc_html__( 'Leave as plugin default to use the built-in layout with your theme header and footer. Or use the shortcode', 'fenton-digital-badges' ) . ' <code>[fenton_digital_badges_find]</code> ' . esc_html__( 'on any page.', 'fenton-digital-badges' ) . '</p>';
 	}
 
 	/**
@@ -207,15 +275,13 @@ final class Admin {
 				?>
 			</form>
 			<hr />
-			<h2><?php esc_html_e( 'Find badges page', 'fenton-digital-badges' ); ?></h2>
-			<p>
-				<?php esc_html_e( 'Public lookup URL:', 'fenton-digital-badges' ); ?>
-				<code><a href="<?php echo esc_url( home_url( '/badges/find/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( home_url( '/badges/find/' ) ); ?></a></code>
-			</p>
-			<p>
-				<?php esc_html_e( 'Or use the shortcode', 'fenton-digital-badges' ); ?>
-				<code>[fenton_digital_badges_find]</code>
-			</p>
+			<form action="options.php" method="post">
+				<?php
+				settings_fields( 'fenton_digital_badges_find_group' );
+				do_settings_sections( 'fenton-digital-badges-find' );
+				submit_button( __( 'Save find page', 'fenton-digital-badges' ) );
+				?>
+			</form>
 		</div>
 		<?php
 	}
@@ -284,12 +350,14 @@ final class Admin {
 			)
 		);
 
-		$issued = 0;
-		$errors = array();
-		$notice = get_transient( 'db_issue_notice_' . get_current_user_id() );
+		$issued  = 0;
+		$skipped = 0;
+		$errors  = array();
+		$notice  = get_transient( 'db_issue_notice_' . get_current_user_id() );
 
 		if ( is_array( $notice ) ) {
-			$issued = isset( $notice['issued'] ) ? absint( $notice['issued'] ) : 0;
+			$issued  = isset( $notice['issued'] ) ? absint( $notice['issued'] ) : 0;
+			$skipped = isset( $notice['skipped'] ) ? absint( $notice['skipped'] ) : 0;
 			if ( isset( $notice['errors'] ) && is_array( $notice['errors'] ) ) {
 				$errors = $notice['errors'];
 			}
@@ -318,6 +386,18 @@ final class Admin {
 						/* translators: %d: number of assertions created */
 						esc_html( _n( '%d badge issued.', '%d badges issued.', $issued, 'fenton-digital-badges' ) ),
 						absint( $issued )
+					);
+					?>
+				</p></div>
+			<?php endif; ?>
+
+			<?php if ( $skipped > 0 ) : ?>
+				<div class="notice notice-info is-dismissible"><p>
+					<?php
+					printf(
+						/* translators: %d: number of duplicate rows skipped */
+						esc_html( _n( '%d row skipped (already issued).', '%d rows skipped (already issued).', $skipped, 'fenton-digital-badges' ) ),
+						absint( $skipped )
 					);
 					?>
 				</p></div>
@@ -412,8 +492,9 @@ final class Admin {
 		set_transient(
 			'db_issue_notice_' . get_current_user_id(),
 			array(
-				'issued' => $result['issued'],
-				'errors' => $result['errors'],
+				'issued'  => $result['issued'],
+				'skipped' => $result['skipped'],
+				'errors'  => $result['errors'],
 			),
 			MINUTE_IN_SECONDS
 		);

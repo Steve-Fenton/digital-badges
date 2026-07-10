@@ -271,7 +271,12 @@ final class Ob_Endpoints {
 	private static function serve_find_page(): void {
 		self::prevent_caching();
 
-		$results  = array();
+		$page = Public_Facing::get_find_page();
+		if ( $page instanceof \WP_Post ) {
+			self::render_find_as_page( $page );
+			return;
+		}
+
 		$error    = '';
 		$searched = false;
 
@@ -281,18 +286,114 @@ final class Ob_Endpoints {
 
 		if ( 'POST' === $request_method ) {
 			$searched = true;
-			$results  = self::process_lookup_request( $error );
+			self::process_lookup_request( $error );
 		}
 
 		self::render_view(
 			'find',
 			array(
-				'results'     => $results,
-				'error'       => $error,
-				'searched'    => $searched,
+				'error'                            => $error,
+				'searched'                         => $searched,
 				'fenton_digital_badges_form_action' => home_url( '/badges/find/' ),
+				'fenton_digital_badges_show_header' => true,
 			)
 		);
+	}
+
+	/**
+	 * Render /badges/find/ using a selected WordPress page and its template.
+	 *
+	 * Keeps the /badges/find/ URL while letting Site Editor / page templates
+	 * control chrome and layout. Injects the find shortcode when the page
+	 * content does not already include it.
+	 */
+	private static function render_find_as_page( \WP_Post $page ): void {
+		global $wp_query, $post;
+
+		$post = $page;
+
+		if ( $wp_query instanceof \WP_Query ) {
+			$wp_query->init_query_flags();
+			$wp_query->is_page            = true;
+			$wp_query->is_singular        = true;
+			$wp_query->is_404             = false;
+			$wp_query->is_home            = false;
+			$wp_query->is_front_page      = false;
+			$wp_query->is_single          = false;
+			$wp_query->is_archive         = false;
+			$wp_query->posts              = array( $page );
+			$wp_query->post               = $page;
+			$wp_query->post_count         = 1;
+			$wp_query->found_posts        = 1;
+			$wp_query->max_num_pages      = 1;
+			$wp_query->queried_object     = $page;
+			$wp_query->queried_object_id  = (int) $page->ID;
+		}
+
+		setup_postdata( $page );
+
+		add_filter( 'the_content', array( self::class, 'maybe_append_find_shortcode' ), 5 );
+
+		remove_action( 'wp_head', 'rel_canonical' );
+		add_action(
+			'wp_head',
+			static function (): void {
+				printf( '<link rel="canonical" href="%s" />' . "\n", esc_url( home_url( '/badges/find/' ) ) );
+			},
+			2
+		);
+
+		Public_Facing::enqueue_assets();
+		add_action( 'wp_head', array( self::class, 'print_public_styles' ), 5 );
+		add_action( 'wp_footer', array( self::class, 'print_public_scripts' ), 20 );
+
+		status_header( 200 );
+		nocache_headers();
+
+		$template = get_page_template();
+
+		if ( ! is_string( $template ) || '' === $template || ! is_readable( $template ) ) {
+			remove_filter( 'the_content', array( self::class, 'maybe_append_find_shortcode' ), 5 );
+
+			$error    = '';
+			$searched = false;
+
+			$request_method = isset( $_SERVER['REQUEST_METHOD'] )
+				? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) )
+				: '';
+
+			if ( 'POST' === $request_method ) {
+				$searched = true;
+				self::process_lookup_request( $error );
+			}
+
+			self::render_view(
+				'find',
+				array(
+					'error'                            => $error,
+					'searched'                         => $searched,
+					'fenton_digital_badges_form_action' => home_url( '/badges/find/' ),
+					'fenton_digital_badges_show_header' => true,
+				)
+			);
+			return;
+		}
+
+		include $template;
+		exit;
+	}
+
+	/**
+	 * Ensure the selected find page outputs the lookup form.
+	 *
+	 * @param string $content Post content.
+	 */
+	public static function maybe_append_find_shortcode( string $content ): string {
+		if ( has_shortcode( $content, 'fenton_digital_badges_find' ) ) {
+			return $content;
+		}
+
+		return $content . "\n\n[fenton_digital_badges_find]";
 	}
 
 	/**
@@ -318,24 +419,26 @@ final class Ob_Endpoints {
 	/**
 	 * Process email lookup POST (shared by page + shortcode).
 	 *
+	 * Always shows the same success path in the UI to avoid email enumeration.
+	 * When matching badges exist, their attestation URLs are emailed to the address.
+	 *
 	 * @param string $error Error message by reference.
-	 * @return list<object>
 	 */
-	public static function process_lookup_request( string &$error ): array {
+	public static function process_lookup_request( string &$error ): void {
 		$error = '';
 
 		$nonce = isset( $_POST['db_find_nonce'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['db_find_nonce'] ) ) : '';
 
 		if ( ! wp_verify_nonce( $nonce, 'db_find_badges' ) ) {
 			$error = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
-			return array();
+			return;
 		}
 
 		$email = isset( $_POST['db_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['db_email'] ) ) : '';
 
 		if ( ! Identity::is_valid_email( $email ) ) {
 			$error = __( 'Please enter a valid email address.', 'fenton-digital-badges' );
-			return array();
+			return;
 		}
 
 		// Simple transient rate limit by IP.
@@ -345,16 +448,79 @@ final class Ob_Endpoints {
 
 		if ( $hits >= 20 ) {
 			$error = __( 'Too many lookups. Please wait a few minutes and try again.', 'fenton-digital-badges' );
-			return array();
+			return;
 		}
 
 		set_transient( $key, $hits + 1, 10 * MINUTE_IN_SECONDS );
 
-		$lookup = Identity::lookup_hash( $email );
-		// Discard plaintext email after hashing.
-		unset( $email );
+		$lookup  = Identity::lookup_hash( $email );
+		$results = Assertion_Repository::find_by_lookup( $lookup );
 
-		return Assertion_Repository::find_by_lookup( $lookup );
+		if ( array() !== $results ) {
+			self::send_lookup_email( $email, $results );
+		}
+
+		// Discard plaintext email after use.
+		unset( $email );
+	}
+
+	/**
+	 * Email attestation URLs for badges found via the public lookup form.
+	 *
+	 * @param string       $email   Recipient email.
+	 * @param list<object> $results Assertion rows.
+	 */
+	private static function send_lookup_email( string $email, array $results ): void {
+		$site_name = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+
+		$entries = array();
+		$seen    = array();
+
+		foreach ( $results as $row ) {
+			$uid = (string) $row->uid;
+			if ( isset( $seen[ $uid ] ) ) {
+				continue;
+			}
+			$seen[ $uid ] = true;
+
+			$url   = Assertion_Repository::attestation_url( $uid );
+			$badge = get_post( (int) $row->badge_post_id );
+			$name  = ( $badge instanceof \WP_Post ) ? get_the_title( $badge ) : '';
+
+			if ( '' === $url ) {
+				continue;
+			}
+
+			$entries[] = array(
+				'name' => '' !== $name ? $name : $uid,
+				'url'  => $url,
+			);
+		}
+
+		if ( array() === $entries ) {
+			return;
+		}
+
+		$subject = sprintf(
+			/* translators: %s: site name */
+			__( 'Your badges on %s', 'fenton-digital-badges' ),
+			$site_name
+		);
+
+		$blocks = array();
+		foreach ( $entries as $entry ) {
+			$blocks[] = $entry['name'] . "\n" . $entry['url'];
+		}
+
+		$body  = sprintf(
+			/* translators: %s: site name */
+			__( 'You searched for your badges on %s. We found the following badges.', 'fenton-digital-badges' ),
+			$site_name
+		);
+		$body .= "\n\n" . implode( "\n\n", $blocks );
+		$body .= "\n\n" . __( 'Enjoy your badges!', 'fenton-digital-badges' ) . "\n";
+
+		wp_mail( $email, $subject, $body );
 	}
 
 	/**
@@ -365,7 +531,7 @@ final class Ob_Endpoints {
 	 * @param bool                 $use_theme_chrome Whether to wrap with get_header/footer.
 	 */
 	private static function render_view( string $view, array $vars, bool $use_theme_chrome = true ): void {
-		$path = FENTON_DIGITAL_BADGES_PATH . 'public/views/' . $view . '.php';
+		$path = Public_Facing::locate_view( $view );
 
 		if ( ! is_readable( $path ) ) {
 			status_header( 500 );

@@ -19,6 +19,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Public_Facing {
 
 	/**
+	 * Option key for the optional Find badges WordPress page.
+	 */
+	public const FIND_PAGE_OPTION = 'fenton_digital_badges_find_page_id';
+
+	/**
 	 * Wire public hooks.
 	 */
 	public static function init(): void {
@@ -27,6 +32,51 @@ final class Public_Facing {
 		add_action( 'wp_head', array( self::class, 'maybe_output_og_tags' ), 5 );
 		add_shortcode( 'fenton_digital_badge', array( self::class, 'render_badge_shortcode' ) );
 		add_shortcode( 'fenton_digital_badges_find', array( self::class, 'render_find_shortcode' ) );
+	}
+
+	/**
+	 * Published page selected to host /badges/find/, if any.
+	 */
+	public static function get_find_page(): ?\WP_Post {
+		$page_id = absint( get_option( self::FIND_PAGE_OPTION, 0 ) );
+
+		if ( $page_id <= 0 ) {
+			return null;
+		}
+
+		$page = get_post( $page_id );
+
+		if ( ! $page instanceof \WP_Post || 'page' !== $page->post_type || 'publish' !== $page->post_status ) {
+			return null;
+		}
+
+		return $page;
+	}
+
+	/**
+	 * Resolve a public view path, allowing theme overrides.
+	 *
+	 * Themes may provide:
+	 * - fenton-digital-badges/{view}.php
+	 * - fenton-digital-badges-{view}.php
+	 *
+	 * @param string $view View name (e.g. find, attestation).
+	 */
+	public static function locate_view( string $view ): string {
+		$view = sanitize_file_name( $view );
+
+		$theme = locate_template(
+			array(
+				'fenton-digital-badges/' . $view . '.php',
+				'fenton-digital-badges-' . $view . '.php',
+			)
+		);
+
+		if ( is_string( $theme ) && '' !== $theme ) {
+			return $theme;
+		}
+
+		return FENTON_DIGITAL_BADGES_PATH . 'public/views/' . $view . '.php';
 	}
 
 	/**
@@ -42,7 +92,10 @@ final class Public_Facing {
 			return;
 		}
 
-		if ( ! has_shortcode( $post->post_content, 'fenton_digital_badges_find' ) ) {
+		$find_page = self::get_find_page();
+		$is_find_page = $find_page instanceof \WP_Post && (int) $find_page->ID === (int) $post->ID;
+
+		if ( ! $is_find_page && ! has_shortcode( $post->post_content, 'fenton_digital_badges_find' ) ) {
 			return;
 		}
 
@@ -152,7 +205,6 @@ final class Public_Facing {
 	public static function render_find_shortcode(): string {
 		Ob_Endpoints::prevent_caching();
 
-		$results  = array();
 		$error    = '';
 		$searched = false;
 
@@ -162,19 +214,26 @@ final class Public_Facing {
 
 		if ( 'POST' === $request_method ) {
 			$searched = true;
-			$results  = Ob_Endpoints::process_lookup_request( $error );
+			Ob_Endpoints::process_lookup_request( $error );
 		}
 
-		$fenton_digital_badges_form_action = get_permalink();
-		if ( ! is_string( $fenton_digital_badges_form_action ) || '' === $fenton_digital_badges_form_action ) {
+		// Prefer the stable /badges/find/ endpoint when this request is that route
+		// (including when a selected page supplies the template).
+		if ( 'find' === get_query_var( 'db_ob' ) ) {
 			$fenton_digital_badges_form_action = home_url( '/badges/find/' );
+		} else {
+			$fenton_digital_badges_form_action = get_permalink();
+			if ( ! is_string( $fenton_digital_badges_form_action ) || '' === $fenton_digital_badges_form_action ) {
+				$fenton_digital_badges_form_action = home_url( '/badges/find/' );
+			}
 		}
 
 		ob_start();
-		$vars = compact( 'results', 'error', 'searched', 'fenton_digital_badges_form_action' );
+		$fenton_digital_badges_show_header = false;
+		$vars = compact( 'error', 'searched', 'fenton_digital_badges_form_action', 'fenton_digital_badges_show_header' );
 		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- scoped template vars.
 		extract( $vars, EXTR_SKIP );
-		include FENTON_DIGITAL_BADGES_PATH . 'public/views/find.php';
+		include self::locate_view( 'find' );
 
 		return (string) ob_get_clean();
 	}
