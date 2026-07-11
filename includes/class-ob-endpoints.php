@@ -55,7 +55,6 @@ final class Ob_Endpoints {
 		add_rewrite_rule( '^ob/badges/([0-9]+)\.json$', 'index.php?db_ob=badge&db_ob_id=$matches[1]', 'top' );
 		add_rewrite_rule( '^ob/assertions/([^/]+)\.json$', 'index.php?db_ob=assertion&db_ob_uid=$matches[1]', 'top' );
 		add_rewrite_rule( '^badges/assertion/([^/]+)/?$', 'index.php?db_ob=attestation&db_ob_uid=$matches[1]', 'top' );
-		add_rewrite_rule( '^badges/embed/([^/]+)/?$', 'index.php?db_ob=embed&db_ob_uid=$matches[1]', 'top' );
 		add_rewrite_rule( '^badges/find/?$', 'index.php?db_ob=find', 'top' );
 	}
 
@@ -95,9 +94,6 @@ final class Ob_Endpoints {
 				break;
 			case 'attestation':
 				self::serve_attestation_page();
-				break;
-			case 'embed':
-				self::serve_embed_page();
 				break;
 			case 'find':
 				self::serve_find_page();
@@ -188,14 +184,8 @@ final class Ob_Endpoints {
 		$issuer          = Issuer::get();
 		$linkedin_url    = LinkedIn::certification_url( $row, $badge );
 		$attestation_url = Assertion_Repository::attestation_url( $uid );
-		$embed_url       = Assertion_Repository::embed_url( $uid );
 		$json_url        = Assertion_Repository::json_url( $uid );
 		$image_url       = Badge_Class::image_url( (int) $badge->ID );
-		$embed_code      = sprintf(
-			'<iframe src="%s" title="%s" width="180" height="220" frameborder="0" loading="lazy"></iframe>',
-			esc_url( $embed_url ),
-			esc_attr( get_the_title( $badge ) )
-		);
 
 		$assertion_data = Assertion_Repository::to_open_badges( $row );
 		$assertion_json = is_array( $assertion_data )
@@ -210,10 +200,8 @@ final class Ob_Endpoints {
 				'issuer'          => $issuer,
 				'linkedin_url'    => $linkedin_url,
 				'attestation_url' => $attestation_url,
-				'embed_url'       => $embed_url,
 				'json_url'        => $json_url,
 				'image_url'       => $image_url,
-				'embed_code'      => $embed_code,
 				'assertion_json'  => $assertion_json,
 				'share_text'      => sprintf(
 					/* translators: 1: badge name, 2: issuer name */
@@ -222,46 +210,6 @@ final class Ob_Endpoints {
 					$issuer['name'] !== '' ? $issuer['name'] : get_bloginfo( 'name' )
 				),
 			)
-		);
-	}
-
-	/**
-	 * Serve embeddable badge HTML.
-	 */
-	private static function serve_embed_page(): void {
-		$uid = sanitize_text_field( (string) get_query_var( 'db_ob_uid' ) );
-		$row = Assertion_Repository::find_by_uid( $uid );
-
-		if ( null === $row || ! empty( $row->revoked ) ) {
-			status_header( 404 );
-			nocache_headers();
-			header( 'Content-Type: text/html; charset=utf-8' );
-			echo esc_html__( 'Badge not found.', 'fenton-digital-badges' );
-			exit;
-		}
-
-		$badge = get_post( (int) $row->badge_post_id );
-
-		if ( ! $badge || 'db_badge' !== $badge->post_type ) {
-			status_header( 404 );
-			nocache_headers();
-			header( 'Content-Type: text/html; charset=utf-8' );
-			echo esc_html__( 'Badge not found.', 'fenton-digital-badges' );
-			exit;
-		}
-
-		// Allow this minimal document to be embedded on other sites.
-		header( 'Content-Security-Policy: frame-ancestors *' );
-
-		self::render_view(
-			'embed',
-			array(
-				'assertion'       => $row,
-				'badge'           => $badge,
-				'attestation_url' => Assertion_Repository::attestation_url( $uid ),
-				'image_url'       => Badge_Class::image_url( (int) $badge->ID ),
-			),
-			false
 		);
 	}
 
@@ -546,7 +494,7 @@ final class Ob_Endpoints {
 		status_header( 200 );
 		nocache_headers();
 
-		if ( $use_theme_chrome && 'embed' !== $view ) {
+		if ( $use_theme_chrome ) {
 			Public_Facing::enqueue_assets();
 			// Print assets directly so theme/optimizers cannot drop them on these custom routes.
 			add_action( 'wp_head', array( self::class, 'print_public_styles' ), 5 );

@@ -19,7 +19,6 @@ flowchart LR
   AssertJSON["/ob/assertions/{uid}.json"]
   Lookup[Public email lookup]
   Attest[Attestation HTML page]
-  Embed[Embed iframe]
   LinkedIn[LinkedIn Add Certification]
 
   Admin --> IssuerJSON
@@ -28,8 +27,6 @@ flowchart LR
   Lookup -->|"HMAC lookup hash"| AssertJSON
   Lookup --> Attest
   Attest --> LinkedIn
-  Attest --> Embed
-  Embed --> Attest
 ```
 
 | Open Badges object | Storage | Public URL |
@@ -47,7 +44,6 @@ flowchart LR
 | Assertion | `/ob/assertions/{uid}.json` |
 | Find badges | `/badges/find/` or `[fenton_digital_badges_find]` (optional page template via **Badges → Settings**) |
 | Attestation | `/badges/assertion/{uid}/` |
-| Embed | `/badges/embed/{uid}/` |
 
 Theme overrides for plugin views: `fenton-digital-badges/{view}.php` (e.g. `find.php`, `attestation.php`).
 

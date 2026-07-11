@@ -3,7 +3,7 @@
  * Public attestation page for a single assertion.
  *
  * Expected vars: $assertion, $badge, $issuer, $linkedin_url, $attestation_url,
- * $embed_url, $json_url, $image_url, $embed_code, $assertion_json, $share_text
+ * $json_url, $image_url, $assertion_json, $share_text
  *
  * @package FentonDigitalBadges
  */
@@ -155,16 +155,6 @@ if ( ! empty( $assertion->expires ) ) {
 						<?php esc_html_e( 'Copy JSON', 'fenton-digital-badges' ); ?>
 					</button>
 				</div>
-			</div>
-
-			<div class="db-attestation__embed">
-				<h2 class="db-attestation__embed-title"><?php esc_html_e( 'Embed this badge', 'fenton-digital-badges' ); ?></h2>
-				<p class="db-attestation__embed-intro"><?php esc_html_e( 'Copy this code to display the badge with a link to this page:', 'fenton-digital-badges' ); ?></p>
-				<label class="screen-reader-text" for="db-embed-code"><?php esc_html_e( 'Embed code', 'fenton-digital-badges' ); ?></label>
-				<textarea id="db-embed-code" class="db-attestation__embed-code" rows="3" readonly><?php echo esc_textarea( $embed_code ); ?></textarea>
-				<button type="button" class="db-attestation__btn db-attestation__btn--ghost" data-db-copy="#db-embed-code">
-					<?php esc_html_e( 'Copy embed code', 'fenton-digital-badges' ); ?>
-				</button>
 			</div>
 		</section>
 	</div>

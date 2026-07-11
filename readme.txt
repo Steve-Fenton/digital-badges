@@ -20,7 +20,7 @@ Fenton Digital Badges lets you issue [Open Badges 1.0](https://github.com/mozill
 * Create badge classes as a custom post type with image, criteria URL, and tags
 * Issue badges in bulk from CSV (email required; name, evidence, and expiry optional)
 * Public Open Badges JSON endpoints for issuer, badge class, and assertion
-* Public attestation pages with share, embed, download, and LinkedIn Add to Profile
+* Public attestation pages with share, download, and LinkedIn Add to Profile
 * Email lookup so earners can request links to badges issued to them (avoids revealing whether an address has badges)
 * Assertions list with revoke, restore, and delete (revoked only)
 * Recipient emails are salted/hashed — plaintext emails are never stored
@@ -44,7 +44,6 @@ To control the layout of `/badges/find/`, create a Page, optionally add `[fenton
 * Assertion JSON: `/ob/assertions/{uid}.json`
 * Attestation page: `/badges/assertion/{uid}/`
 * Find badges: `/badges/find/`
-* Embed: `/badges/embed/{uid}/`
 
 == Installation ==
 

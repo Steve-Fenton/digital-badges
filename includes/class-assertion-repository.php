@@ -345,13 +345,6 @@ final class Assertion_Repository {
 	}
 
 	/**
-	 * Embed HTML URL.
-	 */
-	public static function embed_url( string $uid ): string {
-		return home_url( '/badges/embed/' . rawurlencode( $uid ) . '/' );
-	}
-
-	/**
 	 * Build BadgeAssertion array for JSON output.
 	 *
 	 * @return array<string, mixed>|null
