@@ -45,7 +45,7 @@ flowchart LR
 | Find badges | `/badges/find/` or `[fendigibadge_find]` (optional page template via **Badges → Settings**) |
 | Attestation | `/badges/assertion/{uid}/` |
 
-Theme overrides for plugin views: `fendigibadge/{view}.php` or legacy `fenton-digital-badges/{view}.php` (e.g. `find.php`, `attestation.php`).
+Theme overrides for plugin views: `fendigibadge/{view}.php` (e.g. `find.php`, `attestation.php`).
 
 ## Issuing
 

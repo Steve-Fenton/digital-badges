@@ -43,9 +43,6 @@ final class Ob_Endpoints {
 
 		$classes[] = 'fendigibadge';
 		$classes[] = 'fendigibadge--' . sanitize_html_class( $type );
-		// Legacy body classes for existing theme CSS.
-		$classes[] = 'fenton-digital-badges';
-		$classes[] = 'fenton-digital-badges--' . sanitize_html_class( $type );
 
 		return $classes;
 	}
@@ -340,7 +337,7 @@ final class Ob_Endpoints {
 	 * @param string $content Post content.
 	 */
 	public static function maybe_append_find_shortcode( string $content ): string {
-		if ( has_shortcode( $content, 'fendigibadge_find' ) || has_shortcode( $content, 'fenton_digital_badges_find' ) ) {
+		if ( has_shortcode( $content, 'fendigibadge_find' ) ) {
 			return $content;
 		}
 
@@ -378,29 +375,14 @@ final class Ob_Endpoints {
 	public static function process_lookup_request( string &$error ): void {
 		$error = '';
 
-		$nonce = '';
-		if ( isset( $_POST['fendigibadge_find_nonce'] ) ) {
-			$nonce = sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_find_nonce'] ) );
-		} elseif ( isset( $_POST['db_find_nonce'] ) ) {
-			// Legacy form field name.
-			$nonce = sanitize_text_field( wp_unslash( (string) $_POST['db_find_nonce'] ) );
-		}
+		$nonce = isset( $_POST['fendigibadge_find_nonce'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_find_nonce'] ) ) : '';
 
-		$nonce_ok = (bool) wp_verify_nonce( $nonce, 'fendigibadge_find_badges' )
-			|| (bool) wp_verify_nonce( $nonce, 'db_find_badges' );
-
-		if ( ! $nonce_ok ) {
+		if ( ! wp_verify_nonce( $nonce, 'fendigibadge_find_badges' ) ) {
 			$error = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
 			return;
 		}
 
-		$email = '';
-		if ( isset( $_POST['fendigibadge_email'] ) ) {
-			$email = sanitize_email( wp_unslash( (string) $_POST['fendigibadge_email'] ) );
-		} elseif ( isset( $_POST['db_email'] ) ) {
-			// Legacy form field name.
-			$email = sanitize_email( wp_unslash( (string) $_POST['db_email'] ) );
-		}
+		$email = isset( $_POST['fendigibadge_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['fendigibadge_email'] ) ) : '';
 
 		if ( ! Identity::is_valid_email( $email ) ) {
 			$error = __( 'Please enter a valid email address.', 'fenton-digital-badges' );

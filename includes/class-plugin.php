@@ -48,7 +48,6 @@ final class Plugin {
 	 * Load dependencies.
 	 */
 	private function includes(): void {
-		require_once FENDIGIBADGE_PATH . 'includes/class-upgrade.php';
 		require_once FENDIGIBADGE_PATH . 'includes/class-post-types.php';
 		require_once FENDIGIBADGE_PATH . 'includes/class-identity.php';
 		require_once FENDIGIBADGE_PATH . 'includes/class-issuer.php';
@@ -83,18 +82,8 @@ final class Plugin {
 	public function maybe_upgrade_schema(): void {
 		$stored_version = get_option( 'fendigibadge_db_version', '' );
 
-		if ( '' === $stored_version ) {
-			// Pre-rename installs stored the version under the legacy option key.
-			$stored_version = get_option( 'fenton_digital_badges_db_version', '' );
-		}
-
 		if ( FENDIGIBADGE_VERSION === $stored_version ) {
 			return;
-		}
-
-		// Prefix rename is gated on 0.1.19, not the package.sh-bumped plugin version.
-		if ( Upgrade::needs_prefix_rename( (string) $stored_version ) ) {
-			Upgrade::migrate();
 		}
 
 		Assertion_Repository::create_table();
@@ -102,6 +91,5 @@ final class Plugin {
 		Ob_Endpoints::add_rewrite_rules();
 		flush_rewrite_rules( false );
 		update_option( 'fendigibadge_db_version', FENDIGIBADGE_VERSION, false );
-		delete_option( 'fenton_digital_badges_db_version' );
 	}
 }

@@ -4,7 +4,6 @@
  *
  * Expected vars: $error (string), $searched (bool),
  * $fendigibadge_form_action (string), $fendigibadge_show_header (bool, optional).
- * Legacy aliases: $fenton_digital_badges_form_action, $fenton_digital_badges_show_header.
  *
  * @package FentonDigitalBadges
  */
@@ -16,20 +15,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! isset( $fendigibadge_form_action ) || ! is_string( $fendigibadge_form_action ) || '' === $fendigibadge_form_action ) {
-	if ( isset( $fenton_digital_badges_form_action ) && is_string( $fenton_digital_badges_form_action ) && '' !== $fenton_digital_badges_form_action ) {
-		$fendigibadge_form_action = $fenton_digital_badges_form_action;
-	} else {
-		$fendigibadge_form_action = home_url( '/badges/find/' );
-	}
+	$fendigibadge_form_action = home_url( '/badges/find/' );
 }
 
-if ( ! isset( $fendigibadge_show_header ) ) {
-	$fendigibadge_show_header = isset( $fenton_digital_badges_show_header )
-		? (bool) $fenton_digital_badges_show_header
-		: true;
-} else {
-	$fendigibadge_show_header = (bool) $fendigibadge_show_header;
-}
+$fendigibadge_show_header = isset( $fendigibadge_show_header ) ? (bool) $fendigibadge_show_header : true;
 ?>
 <div class="fendigibadge-find">
 	<?php if ( $fendigibadge_show_header ) : ?>

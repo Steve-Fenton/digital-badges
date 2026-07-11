@@ -30,12 +30,12 @@ You can add templates for the badge pages using `/wp-admin/site-editor.php?p=%2F
 * Click "Add Template"
 * Select "Single item: Badge" or "Archive: Badge"
 
-To control the layout of `/badges/find/`, create a Page, optionally add `[fendigibadge_find]`, then choose that page under **Badges → Settings → Find badges page**. Edit the page’s template in the Site Editor. Themes can also override the form markup with `fenton-digital-badges/find.php`.
+To control the layout of `/badges/find/`, create a Page, optionally add `[fendigibadge_find]`, then choose that page under **Badges → Settings → Find badges page**. Edit the page’s template in the Site Editor. Themes can also override the form markup with `fendigibadge/find.php`.
 
 **Shortcodes**
 
-* `[fendigibadge id="123"]` — display a badge (`[fenton_digital_badge]` still works)
-* `[fendigibadge_find]` — email lookup form (also available at `/badges/find/`; `[fenton_digital_badges_find]` still works)
+* `[fendigibadge id="123"]` — display a badge
+* `[fendigibadge_find]` — email lookup form (also available at `/badges/find/`)
 
 **Public endpoints**
 
@@ -78,15 +78,12 @@ This release implements Open Badges 1.0 JSON endpoints and assertions.
 == Changelog ==
 
 = 0.1.19 =
-* Renamed internal prefixes to `fendigibadge` for WordPress.org plugin review compliance. Existing data, shortcodes, and public URLs continue to work.
+* Renamed internal prefixes to `fendigibadge` for WordPress.org plugin review compliance.
 
 = 0.1.5 =
 * Initial public release candidate for the WordPress.org plugin directory.
 
 == Upgrade Notice ==
-
-= 0.1.19 =
-Prefix rename for plugin directory compliance; existing badges and assertions are migrated automatically.
 
 = 0.1.5 =
 Initial release.

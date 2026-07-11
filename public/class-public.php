@@ -32,9 +32,6 @@ final class Public_Facing {
 		add_action( 'wp_head', array( self::class, 'maybe_output_og_tags' ), 5 );
 		add_shortcode( 'fendigibadge', array( self::class, 'render_badge_shortcode' ) );
 		add_shortcode( 'fendigibadge_find', array( self::class, 'render_find_shortcode' ) );
-		// Legacy shortcode aliases (pre-fendigibadge prefix).
-		add_shortcode( 'fenton_digital_badge', array( self::class, 'render_badge_shortcode' ) );
-		add_shortcode( 'fenton_digital_badges_find', array( self::class, 'render_find_shortcode' ) );
 	}
 
 	/**
@@ -62,8 +59,8 @@ final class Public_Facing {
 	 * Themes may provide:
 	 * - fendigibadge/{view}.php
 	 * - fendigibadge-{view}.php
-	 * - fenton-digital-badges/{view}.php (legacy)
-	 * - fenton-digital-badges-{view}.php (legacy)
+	 * - fenton-digital-badges/{view}.php
+	 * - fenton-digital-badges-{view}.php
 	 *
 	 * @param string $view View name (e.g. find, attestation).
 	 */
@@ -102,10 +99,7 @@ final class Public_Facing {
 		$find_page = self::get_find_page();
 		$is_find_page = $find_page instanceof \WP_Post && (int) $find_page->ID === (int) $post->ID;
 
-		$has_find_shortcode = has_shortcode( $post->post_content, 'fendigibadge_find' )
-			|| has_shortcode( $post->post_content, 'fenton_digital_badges_find' );
-
-		if ( ! $is_find_page && ! $has_find_shortcode ) {
+		if ( ! $is_find_page && ! has_shortcode( $post->post_content, 'fendigibadge_find' ) ) {
 			return;
 		}
 
