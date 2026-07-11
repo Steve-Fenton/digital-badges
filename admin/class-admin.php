@@ -149,6 +149,33 @@ final class Admin {
 			);
 		}
 
+		add_settings_section(
+			'fendigibadge_email_section',
+			__( 'Email settings', 'fenton-digital-badges' ),
+			static function (): void {
+				echo '<p>' . esc_html__( 'Configure the From address and the body of emails sent when someone looks up their badges. Leave From fields blank to use the WordPress defaults. Leave body fields blank to use the plugin defaults.', 'fenton-digital-badges' ) . '</p>';
+			},
+			'fendigibadge-settings'
+		);
+
+		$email_fields = array(
+			'sending_email'        => __( 'Sending email', 'fenton-digital-badges' ),
+			'sending_display_name' => __( 'Sending display name', 'fenton-digital-badges' ),
+			'find_email'           => __( 'Find badge email', 'fenton-digital-badges' ),
+			'find_email_signoff'   => __( 'Find badge email sign-off', 'fenton-digital-badges' ),
+		);
+
+		foreach ( $email_fields as $key => $label ) {
+			add_settings_field(
+				'fendigibadge_issuer_' . $key,
+				$label,
+				array( self::class, 'render_issuer_field' ),
+				'fendigibadge-settings',
+				'fendigibadge_email_section',
+				array( 'key' => $key )
+			);
+		}
+
 		add_settings_field(
 			'fendigibadge_find_page',
 			__( 'Page template', 'fenton-digital-badges' ),
@@ -240,13 +267,24 @@ final class Admin {
 		$name   = Issuer::OPTION_KEY . '[' . $key . ']';
 		$value  = $issuer[ $key ] ?? '';
 
-		if ( 'description' === $key ) {
+		if ( in_array( $key, array( 'description', 'find_email', 'find_email_signoff' ), true ) ) {
+			$rows = 'description' === $key ? 3 : 4;
 			printf(
-				'<textarea class="large-text" rows="3" name="%s" id="%s">%s</textarea>',
+				'<textarea class="large-text" rows="%d" name="%s" id="%s">%s</textarea>',
+				$rows,
 				esc_attr( $name ),
 				esc_attr( $name ),
 				esc_textarea( (string) $value )
 			);
+
+			if ( 'find_email' === $key ) {
+				echo '<p class="description">' . esc_html__( 'Opening text before the list of matching badges. Leave blank for the default message.', 'fenton-digital-badges' ) . '</p>';
+			}
+
+			if ( 'find_email_signoff' === $key ) {
+				echo '<p class="description">' . esc_html__( 'Closing text after the list of matching badges. Leave blank for the default sign-off.', 'fenton-digital-badges' ) . '</p>';
+			}
+
 			return;
 		}
 
@@ -255,7 +293,9 @@ final class Admin {
 			return;
 		}
 
-		$type = 'email' === $key ? 'email' : ( 'url' === $key ? 'url' : 'text' );
+		$type = in_array( $key, array( 'email', 'sending_email' ), true )
+			? 'email'
+			: ( 'url' === $key ? 'url' : 'text' );
 
 		printf(
 			'<input class="regular-text" type="%s" name="%s" id="%s" value="%s" />',
@@ -267,6 +307,14 @@ final class Admin {
 
 		if ( 'linkedin_organization_id' === $key ) {
 			echo '<p class="description">' . esc_html__( 'Optional numeric LinkedIn company ID for Add to Profile links.', 'fenton-digital-badges' ) . '</p>';
+		}
+
+		if ( 'sending_email' === $key ) {
+			echo '<p class="description">' . esc_html__( 'From address used when the plugin sends email. Leave blank for the WordPress default.', 'fenton-digital-badges' ) . '</p>';
+		}
+
+		if ( 'sending_display_name' === $key ) {
+			echo '<p class="description">' . esc_html__( 'From display name used when the plugin sends email. Leave blank for the WordPress default.', 'fenton-digital-badges' ) . '</p>';
 		}
 	}
 
@@ -322,7 +370,7 @@ final class Admin {
 				<?php
 				settings_fields( 'fendigibadge_issuer_group' );
 				do_settings_sections( 'fendigibadge-settings' );
-				submit_button( __( 'Save issuer', 'fenton-digital-badges' ) );
+				submit_button( __( 'Save settings', 'fenton-digital-badges' ) );
 				?>
 			</form>
 			<hr />

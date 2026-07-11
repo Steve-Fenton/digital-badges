@@ -624,23 +624,35 @@ final class Ob_Endpoints {
 	 *
 	 * Always shows the same success path in the UI to avoid email enumeration.
 	 * When matching badges exist, their attestation URLs are emailed to the address.
+	 * Runs at most once per request so a double-rendered shortcode cannot send twice.
 	 *
 	 * @param string $error Error message by reference.
 	 */
 	public static function process_lookup_request( string &$error ): void {
-		$error = '';
+		static $processed = false;
+		static $cached_error = '';
+
+		if ( $processed ) {
+			$error = $cached_error;
+			return;
+		}
+
+		$processed = true;
+		$error     = '';
 
 		$nonce = isset( $_POST['fendigibadge_find_nonce'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_find_nonce'] ) ) : '';
 
 		if ( ! wp_verify_nonce( $nonce, 'fendigibadge_find_badges' ) ) {
-			$error = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
+			$error         = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
+			$cached_error  = $error;
 			return;
 		}
 
 		$email = isset( $_POST['fendigibadge_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['fendigibadge_email'] ) ) : '';
 
 		if ( ! Identity::is_valid_email( $email ) ) {
-			$error = __( 'Please enter a valid email address.', 'fenton-digital-badges' );
+			$error         = __( 'Please enter a valid email address.', 'fenton-digital-badges' );
+			$cached_error  = $error;
 			return;
 		}
 
@@ -650,7 +662,8 @@ final class Ob_Endpoints {
 		$hits = (int) get_transient( $key );
 
 		if ( $hits >= 20 ) {
-			$error = __( 'Too many lookups. Please wait a few minutes and try again.', 'fenton-digital-badges' );
+			$error         = __( 'Too many lookups. Please wait a few minutes and try again.', 'fenton-digital-badges' );
+			$cached_error  = $error;
 			return;
 		}
 
@@ -662,6 +675,8 @@ final class Ob_Endpoints {
 		if ( array() !== $results ) {
 			self::send_lookup_email( $email, $results );
 		}
+
+		$cached_error = $error;
 
 		// Discard plaintext email after use.
 		unset( $email );
@@ -731,15 +746,54 @@ final class Ob_Endpoints {
 			$blocks[] = $block;
 		}
 
-		$body  = sprintf(
-			/* translators: %s: site name */
-			__( 'You searched for your badges on %s. We found the following badges.', 'fenton-digital-badges' ),
-			$site_name
-		);
+		$issuer = Issuer::get();
+
+		$intro = trim( $issuer['find_email'] );
+		if ( '' === $intro ) {
+			$intro = sprintf(
+				/* translators: %s: site name */
+				__( 'You searched for your badges on %s. We found the following badges.', 'fenton-digital-badges' ),
+				$site_name
+			);
+		}
+
+		$signoff = trim( $issuer['find_email_signoff'] );
+		if ( '' === $signoff ) {
+			$signoff = __( 'Enjoy your badges!', 'fenton-digital-badges' );
+		}
+
+		$body  = $intro;
 		$body .= "\n\n" . implode( "\n\n", $blocks );
-		$body .= "\n\n" . __( 'Enjoy your badges!', 'fenton-digital-badges' ) . "\n";
+		$body .= "\n\n" . $signoff . "\n";
+
+		$from_email    = $issuer['sending_email'];
+		$from_name     = $issuer['sending_display_name'];
+		$from_email_cb = null;
+		$from_name_cb  = null;
+
+		if ( '' !== $from_email && is_email( $from_email ) ) {
+			$from_email_cb = static function () use ( $from_email ): string {
+				return $from_email;
+			};
+			add_filter( 'wp_mail_from', $from_email_cb );
+		}
+
+		if ( '' !== $from_name ) {
+			$from_name_cb = static function () use ( $from_name ): string {
+				return $from_name;
+			};
+			add_filter( 'wp_mail_from_name', $from_name_cb );
+		}
 
 		wp_mail( $email, $subject, $body );
+
+		if ( null !== $from_email_cb ) {
+			remove_filter( 'wp_mail_from', $from_email_cb );
+		}
+
+		if ( null !== $from_name_cb ) {
+			remove_filter( 'wp_mail_from_name', $from_name_cb );
+		}
 	}
 
 	/**

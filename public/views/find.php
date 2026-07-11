@@ -28,14 +28,16 @@ $fendigibadge_show_header = isset( $fendigibadge_show_header ) ? (bool) $fendigi
 		</header>
 	<?php endif; ?>
 
-	<form class="fendigibadge-find__form" method="post" action="<?php echo esc_url( $fendigibadge_form_action ); ?>">
-		<?php wp_nonce_field( 'fendigibadge_find_badges', 'fendigibadge_find_nonce' ); ?>
-		<label class="fendigibadge-find__label" for="fendigibadge_email"><?php esc_html_e( 'Email address', 'fenton-digital-badges' ); ?></label>
-		<div class="fendigibadge-find__row">
-			<input class="fendigibadge-find__input" type="email" name="fendigibadge_email" id="fendigibadge_email" required autocomplete="email" />
-			<button class="fendigibadge-find__submit" type="submit"><?php esc_html_e( 'Find badges', 'fenton-digital-badges' ); ?></button>
-		</div>
-	</form>
+	<?php if ( ! ( $searched && '' === $error ) ) : ?>
+		<form class="fendigibadge-find__form" method="post" action="<?php echo esc_url( $fendigibadge_form_action ); ?>">
+			<?php wp_nonce_field( 'fendigibadge_find_badges', 'fendigibadge_find_nonce' ); ?>
+			<label class="fendigibadge-find__label" for="fendigibadge_email"><?php esc_html_e( 'Email address', 'fenton-digital-badges' ); ?></label>
+			<div class="fendigibadge-find__row">
+				<input class="fendigibadge-find__input" type="email" name="fendigibadge_email" id="fendigibadge_email" required autocomplete="email" />
+				<button class="fendigibadge-find__submit" type="submit"><?php esc_html_e( 'Find badges', 'fenton-digital-badges' ); ?></button>
+			</div>
+		</form>
+	<?php endif; ?>
 
 	<?php if ( '' !== $error ) : ?>
 		<p class="fendigibadge-find__error" role="alert"><?php echo esc_html( $error ); ?></p>

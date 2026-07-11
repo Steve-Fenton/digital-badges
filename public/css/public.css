@@ -31,7 +31,7 @@
 .fendigibadge-find {
 	max-width: 40rem;
 	margin: 2rem auto;
-	padding: 0 1rem;
+	padding: 0;
 }
 
 .fendigibadge-find__title {
@@ -128,7 +128,6 @@
 
 .fendigibadge-find__notice {
 	margin-top: 1rem;
-	color: #444;
 }
 
 .fendigibadge-claim-name {
