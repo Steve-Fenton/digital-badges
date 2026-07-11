@@ -35,12 +35,15 @@ final class Ob_Endpoints {
 	 * @return list<string>
 	 */
 	public static function body_class( array $classes ): array {
-		$type = get_query_var( 'db_ob' );
+		$type = get_query_var( 'fendigibadge_ob' );
 
 		if ( ! is_string( $type ) || '' === $type ) {
 			return $classes;
 		}
 
+		$classes[] = 'fendigibadge';
+		$classes[] = 'fendigibadge--' . sanitize_html_class( $type );
+		// Legacy body classes for existing theme CSS.
 		$classes[] = 'fenton-digital-badges';
 		$classes[] = 'fenton-digital-badges--' . sanitize_html_class( $type );
 
@@ -51,11 +54,11 @@ final class Ob_Endpoints {
 	 * Register rewrite rules.
 	 */
 	public static function add_rewrite_rules(): void {
-		add_rewrite_rule( '^ob/issuer\.json$', 'index.php?db_ob=issuer', 'top' );
-		add_rewrite_rule( '^ob/badges/([0-9]+)\.json$', 'index.php?db_ob=badge&db_ob_id=$matches[1]', 'top' );
-		add_rewrite_rule( '^ob/assertions/([^/]+)\.json$', 'index.php?db_ob=assertion&db_ob_uid=$matches[1]', 'top' );
-		add_rewrite_rule( '^badges/assertion/([^/]+)/?$', 'index.php?db_ob=attestation&db_ob_uid=$matches[1]', 'top' );
-		add_rewrite_rule( '^badges/find/?$', 'index.php?db_ob=find', 'top' );
+		add_rewrite_rule( '^ob/issuer\.json$', 'index.php?fendigibadge_ob=issuer', 'top' );
+		add_rewrite_rule( '^ob/badges/([0-9]+)\.json$', 'index.php?fendigibadge_ob=badge&fendigibadge_ob_id=$matches[1]', 'top' );
+		add_rewrite_rule( '^ob/assertions/([^/]+)\.json$', 'index.php?fendigibadge_ob=assertion&fendigibadge_ob_uid=$matches[1]', 'top' );
+		add_rewrite_rule( '^badges/assertion/([^/]+)/?$', 'index.php?fendigibadge_ob=attestation&fendigibadge_ob_uid=$matches[1]', 'top' );
+		add_rewrite_rule( '^badges/find/?$', 'index.php?fendigibadge_ob=find', 'top' );
 	}
 
 	/**
@@ -65,9 +68,9 @@ final class Ob_Endpoints {
 	 * @return list<string>
 	 */
 	public static function register_query_vars( array $vars ): array {
-		$vars[] = 'db_ob';
-		$vars[] = 'db_ob_id';
-		$vars[] = 'db_ob_uid';
+		$vars[] = 'fendigibadge_ob';
+		$vars[] = 'fendigibadge_ob_id';
+		$vars[] = 'fendigibadge_ob_uid';
 
 		return $vars;
 	}
@@ -76,7 +79,7 @@ final class Ob_Endpoints {
 	 * Dispatch endpoint requests.
 	 */
 	public static function handle_request(): void {
-		$type = get_query_var( 'db_ob' );
+		$type = get_query_var( 'fendigibadge_ob' );
 
 		if ( ! is_string( $type ) || '' === $type ) {
 			return;
@@ -116,7 +119,7 @@ final class Ob_Endpoints {
 	 * Serve BadgeClass JSON.
 	 */
 	private static function serve_badge_json(): void {
-		$id   = absint( get_query_var( 'db_ob_id' ) );
+		$id   = absint( get_query_var( 'fendigibadge_ob_id' ) );
 		$data = Badge_Class::to_open_badges( $id );
 
 		if ( null === $data ) {
@@ -130,7 +133,7 @@ final class Ob_Endpoints {
 	 * Serve BadgeAssertion JSON (or 410 when revoked).
 	 */
 	private static function serve_assertion_json(): void {
-		$uid = sanitize_text_field( (string) get_query_var( 'db_ob_uid' ) );
+		$uid = sanitize_text_field( (string) get_query_var( 'fendigibadge_ob_uid' ) );
 		$row = Assertion_Repository::find_by_uid( $uid );
 
 		if ( null === $row ) {
@@ -158,7 +161,7 @@ final class Ob_Endpoints {
 	 * Serve public attestation HTML page.
 	 */
 	private static function serve_attestation_page(): void {
-		$uid = sanitize_text_field( (string) get_query_var( 'db_ob_uid' ) );
+		$uid = sanitize_text_field( (string) get_query_var( 'fendigibadge_ob_uid' ) );
 		$row = Assertion_Repository::find_by_uid( $uid );
 
 		if ( null === $row || ! empty( $row->revoked ) ) {
@@ -172,7 +175,7 @@ final class Ob_Endpoints {
 
 		$badge = get_post( (int) $row->badge_post_id );
 
-		if ( ! $badge || 'db_badge' !== $badge->post_type ) {
+		if ( ! $badge || Post_Types::BADGE !== $badge->post_type ) {
 			global $wp_query;
 			$wp_query->set_404();
 			status_header( 404 );
@@ -240,10 +243,10 @@ final class Ob_Endpoints {
 		self::render_view(
 			'find',
 			array(
-				'error'                            => $error,
-				'searched'                         => $searched,
-				'fenton_digital_badges_form_action' => home_url( '/badges/find/' ),
-				'fenton_digital_badges_show_header' => true,
+				'error'                   => $error,
+				'searched'                => $searched,
+				'fendigibadge_form_action' => home_url( '/badges/find/' ),
+				'fendigibadge_show_header' => true,
 			)
 		);
 	}
@@ -318,10 +321,10 @@ final class Ob_Endpoints {
 			self::render_view(
 				'find',
 				array(
-					'error'                            => $error,
-					'searched'                         => $searched,
-					'fenton_digital_badges_form_action' => home_url( '/badges/find/' ),
-					'fenton_digital_badges_show_header' => true,
+					'error'                   => $error,
+					'searched'                => $searched,
+					'fendigibadge_form_action' => home_url( '/badges/find/' ),
+					'fendigibadge_show_header' => true,
 				)
 			);
 			return;
@@ -337,11 +340,11 @@ final class Ob_Endpoints {
 	 * @param string $content Post content.
 	 */
 	public static function maybe_append_find_shortcode( string $content ): string {
-		if ( has_shortcode( $content, 'fenton_digital_badges_find' ) ) {
+		if ( has_shortcode( $content, 'fendigibadge_find' ) || has_shortcode( $content, 'fenton_digital_badges_find' ) ) {
 			return $content;
 		}
 
-		return $content . "\n\n[fenton_digital_badges_find]";
+		return $content . "\n\n[fendigibadge_find]";
 	}
 
 	/**
@@ -375,14 +378,29 @@ final class Ob_Endpoints {
 	public static function process_lookup_request( string &$error ): void {
 		$error = '';
 
-		$nonce = isset( $_POST['db_find_nonce'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['db_find_nonce'] ) ) : '';
+		$nonce = '';
+		if ( isset( $_POST['fendigibadge_find_nonce'] ) ) {
+			$nonce = sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_find_nonce'] ) );
+		} elseif ( isset( $_POST['db_find_nonce'] ) ) {
+			// Legacy form field name.
+			$nonce = sanitize_text_field( wp_unslash( (string) $_POST['db_find_nonce'] ) );
+		}
 
-		if ( ! wp_verify_nonce( $nonce, 'db_find_badges' ) ) {
+		$nonce_ok = (bool) wp_verify_nonce( $nonce, 'fendigibadge_find_badges' )
+			|| (bool) wp_verify_nonce( $nonce, 'db_find_badges' );
+
+		if ( ! $nonce_ok ) {
 			$error = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
 			return;
 		}
 
-		$email = isset( $_POST['db_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['db_email'] ) ) : '';
+		$email = '';
+		if ( isset( $_POST['fendigibadge_email'] ) ) {
+			$email = sanitize_email( wp_unslash( (string) $_POST['fendigibadge_email'] ) );
+		} elseif ( isset( $_POST['db_email'] ) ) {
+			// Legacy form field name.
+			$email = sanitize_email( wp_unslash( (string) $_POST['db_email'] ) );
+		}
 
 		if ( ! Identity::is_valid_email( $email ) ) {
 			$error = __( 'Please enter a valid email address.', 'fenton-digital-badges' );
@@ -391,7 +409,7 @@ final class Ob_Endpoints {
 
 		// Simple transient rate limit by IP.
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
-		$key = 'db_find_' . md5( $ip );
+		$key = 'fendigibadge_find_' . md5( $ip );
 		$hits = (int) get_transient( $key );
 
 		if ( $hits >= 20 ) {
@@ -513,14 +531,14 @@ final class Ob_Endpoints {
 	 * Print public CSS for attestation/find pages.
 	 */
 	public static function print_public_styles(): void {
-		wp_print_styles( 'fenton-digital-badges-public' );
+		wp_print_styles( 'fendigibadge-public' );
 	}
 
 	/**
 	 * Print public JS for attestation/find pages.
 	 */
 	public static function print_public_scripts(): void {
-		wp_print_scripts( 'fenton-digital-badges-public' );
+		wp_print_scripts( 'fendigibadge-public' );
 	}
 
 	/**

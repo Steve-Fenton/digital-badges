@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom assertions table.
 final class Assertion_Repository {
 
-	public const TABLE_SUFFIX = 'db_assertions';
+	public const TABLE_SUFFIX = 'fendigibadge_assertions';
 
 	/**
 	 * Full table name including wpdb prefix.

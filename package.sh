@@ -91,9 +91,9 @@ sync_version() {
   sed -E "s/^( \* Version:[[:space:]]*).+$/\1${version}/" "${PLUGIN_FILE}" >"${tmp}"
   mv "${tmp}" "${PLUGIN_FILE}"
 
-  # Runtime constant: define( 'FENTON_DIGITAL_BADGES_VERSION', 'X.Y.Z' );
+  # Runtime constant: define( 'FENDIGIBADGE_VERSION', 'X.Y.Z' );
   tmp="$(mktemp)"
-  sed -E "s/^(define\( 'FENTON_DIGITAL_BADGES_VERSION', ')[^']+('[[:space:]]*\);)$/\1${version}\2/" "${PLUGIN_FILE}" >"${tmp}"
+  sed -E "s/^(define\( 'FENDIGIBADGE_VERSION', ')[^']+('[[:space:]]*\);)$/\1${version}\2/" "${PLUGIN_FILE}" >"${tmp}"
   mv "${tmp}" "${PLUGIN_FILE}"
 
   # WordPress.org readme stable tag.

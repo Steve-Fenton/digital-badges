@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Identity {
 
-	public const OPTION_SECRET = 'fenton_digital_badges_lookup_secret';
+	public const OPTION_SECRET = 'fendigibadge_lookup_secret';
 
 	/**
 	 * Normalize an email for hashing.

@@ -52,7 +52,7 @@
 		});
 	}
 
-	document.querySelectorAll('[data-db-share]').forEach(function (button) {
+	document.querySelectorAll('[data-fendigibadge-share]').forEach(function (button) {
 		if (canWebShare()) {
 			button.removeAttribute('hidden');
 		}
@@ -64,17 +64,17 @@
 			return;
 		}
 
-		var shareButton = target.closest('[data-db-share]');
+		var shareButton = target.closest('[data-fendigibadge-share]');
 		if (shareButton) {
 			event.preventDefault();
 			if (!canWebShare()) {
 				return;
 			}
 
-			var title = shareButton.getAttribute('data-db-share-title') || document.title;
-			var description = shareButton.getAttribute('data-db-share-text') || '';
-			var url = shareButton.getAttribute('data-db-share-url') || window.location.href;
-			var imageUrl = shareButton.getAttribute('data-db-share-image') || '';
+			var title = shareButton.getAttribute('data-fendigibadge-share-title') || document.title;
+			var description = shareButton.getAttribute('data-fendigibadge-share-text') || '';
+			var url = shareButton.getAttribute('data-fendigibadge-share-url') || window.location.href;
+			var imageUrl = shareButton.getAttribute('data-fendigibadge-share-image') || '';
 			var text = buildShareText(title, description, url);
 
 			var basePayload = {
@@ -108,10 +108,10 @@
 			return;
 		}
 
-		var toggle = target.closest('[data-db-toggle]');
+		var toggle = target.closest('[data-fendigibadge-toggle]');
 		if (toggle) {
 			event.preventDefault();
-			var panelSelector = toggle.getAttribute('data-db-toggle');
+			var panelSelector = toggle.getAttribute('data-fendigibadge-toggle');
 			if (!panelSelector) {
 				return;
 			}
@@ -131,12 +131,12 @@
 			return;
 		}
 
-		var button = target.closest('[data-db-copy]');
+		var button = target.closest('[data-fendigibadge-copy]');
 		if (!button) {
 			return;
 		}
 
-		var selector = button.getAttribute('data-db-copy');
+		var selector = button.getAttribute('data-fendigibadge-copy');
 		if (!selector) {
 			return;
 		}

@@ -48,16 +48,17 @@ final class Plugin {
 	 * Load dependencies.
 	 */
 	private function includes(): void {
-		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-post-types.php';
-		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-identity.php';
-		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-issuer.php';
-		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-badge-class.php';
-		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-assertion-repository.php';
-		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-csv-issuer.php';
-		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-linkedin.php';
-		require_once FENTON_DIGITAL_BADGES_PATH . 'includes/class-ob-endpoints.php';
-		require_once FENTON_DIGITAL_BADGES_PATH . 'admin/class-admin.php';
-		require_once FENTON_DIGITAL_BADGES_PATH . 'public/class-public.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-upgrade.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-post-types.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-identity.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-issuer.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-badge-class.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-assertion-repository.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-csv-issuer.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-linkedin.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-ob-endpoints.php';
+		require_once FENDIGIBADGE_PATH . 'admin/class-admin.php';
+		require_once FENDIGIBADGE_PATH . 'public/class-public.php';
 	}
 
 	/**
@@ -80,16 +81,27 @@ final class Plugin {
 	 * Ensure DB table and lookup secret exist after updates.
 	 */
 	public function maybe_upgrade_schema(): void {
-		$db_version = get_option( 'fenton_digital_badges_db_version', '' );
+		$stored_version = get_option( 'fendigibadge_db_version', '' );
 
-		if ( FENTON_DIGITAL_BADGES_VERSION === $db_version ) {
+		if ( '' === $stored_version ) {
+			// Pre-rename installs stored the version under the legacy option key.
+			$stored_version = get_option( 'fenton_digital_badges_db_version', '' );
+		}
+
+		if ( FENDIGIBADGE_VERSION === $stored_version ) {
 			return;
+		}
+
+		// Prefix rename is gated on 0.1.19, not the package.sh-bumped plugin version.
+		if ( Upgrade::needs_prefix_rename( (string) $stored_version ) ) {
+			Upgrade::migrate();
 		}
 
 		Assertion_Repository::create_table();
 		Identity::ensure_secret();
 		Ob_Endpoints::add_rewrite_rules();
 		flush_rewrite_rules( false );
-		update_option( 'fenton_digital_badges_db_version', FENTON_DIGITAL_BADGES_VERSION, false );
+		update_option( 'fendigibadge_db_version', FENDIGIBADGE_VERSION, false );
+		delete_option( 'fenton_digital_badges_db_version' );
 	}
 }

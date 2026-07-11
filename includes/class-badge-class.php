@@ -1,6 +1,6 @@
 <?php
 /**
- * Open Badges BadgeClass helpers for db_badge posts.
+ * Open Badges BadgeClass helpers for fendigibadge_badge posts.
  *
  * @package FentonDigitalBadges
  */
@@ -18,8 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Badge_Class {
 
-	public const META_CRITERIA_URL = '_db_criteria_url';
-	public const META_TAGS         = '_db_tags';
+	public const META_CRITERIA_URL = '_fendigibadge_criteria_url';
+	public const META_TAGS         = '_fendigibadge_tags';
 
 	/**
 	 * Public URL for a hosted BadgeClass JSON document.
@@ -95,7 +95,7 @@ final class Badge_Class {
 	public static function is_issuable( int $badge_post_id ): bool {
 		$badge = get_post( $badge_post_id );
 
-		if ( ! $badge || 'db_badge' !== $badge->post_type || 'publish' !== $badge->post_status ) {
+		if ( ! $badge || Post_Types::BADGE !== $badge->post_type || 'publish' !== $badge->post_status ) {
 			return false;
 		}
 
@@ -110,7 +110,7 @@ final class Badge_Class {
 	public static function to_open_badges( int $badge_post_id ): ?array {
 		$badge = get_post( $badge_post_id );
 
-		if ( ! $badge || 'db_badge' !== $badge->post_type || 'publish' !== $badge->post_status ) {
+		if ( ! $badge || Post_Types::BADGE !== $badge->post_type || 'publish' !== $badge->post_status ) {
 			return null;
 		}
 
@@ -141,7 +141,7 @@ final class Badge_Class {
 	 * Save badge meta from the edit screen.
 	 */
 	public static function save_meta( int $post_id ): void {
-		if ( ! isset( $_POST['db_badge_meta_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( (string) $_POST['db_badge_meta_nonce'] ) ), 'db_badge_meta' ) ) {
+		if ( ! isset( $_POST['fendigibadge_badge_meta_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_badge_meta_nonce'] ) ), 'fendigibadge_badge_meta' ) ) {
 			return;
 		}
 
@@ -153,8 +153,8 @@ final class Badge_Class {
 			return;
 		}
 
-		$criteria = isset( $_POST['db_criteria_url'] ) ? esc_url_raw( wp_unslash( (string) $_POST['db_criteria_url'] ) ) : '';
-		$tags     = isset( $_POST['db_tags'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['db_tags'] ) ) : '';
+		$criteria = isset( $_POST['fendigibadge_criteria_url'] ) ? esc_url_raw( wp_unslash( (string) $_POST['fendigibadge_criteria_url'] ) ) : '';
+		$tags     = isset( $_POST['fendigibadge_tags'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_tags'] ) ) : '';
 
 		update_post_meta( $post_id, self::META_CRITERIA_URL, $criteria );
 		update_post_meta( $post_id, self::META_TAGS, $tags );

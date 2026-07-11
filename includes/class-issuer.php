@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Issuer {
 
-	public const OPTION_KEY = 'fenton_digital_badges_issuer';
+	public const OPTION_KEY = 'fendigibadge_issuer';
 
 	/**
 	 * Default issuer option values.

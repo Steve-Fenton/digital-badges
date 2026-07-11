@@ -31,9 +31,9 @@ flowchart LR
 
 | Open Badges object | Storage | Public URL |
 |--------------------|---------|------------|
-| IssuerOrganization | `fenton_digital_badges_issuer` option | `/ob/issuer.json` |
-| BadgeClass | `db_badge` CPT + meta | `/ob/badges/{id}.json` |
-| Assertion | `{prefix}db_assertions` table | `/ob/assertions/{uid}.json` |
+| IssuerOrganization | `fendigibadge_issuer` option | `/ob/issuer.json` |
+| BadgeClass | `fendigibadge_badge` CPT + meta | `/ob/badges/{id}.json` |
+| Assertion | `{prefix}fendigibadge_assertions` table | `/ob/assertions/{uid}.json` |
 
 ## Open Badges endpoints
 
@@ -42,10 +42,10 @@ flowchart LR
 | Issuer | `/ob/issuer.json` |
 | BadgeClass | `/ob/badges/{id}.json` |
 | Assertion | `/ob/assertions/{uid}.json` |
-| Find badges | `/badges/find/` or `[fenton_digital_badges_find]` (optional page template via **Badges → Settings**) |
+| Find badges | `/badges/find/` or `[fendigibadge_find]` (optional page template via **Badges → Settings**) |
 | Attestation | `/badges/assertion/{uid}/` |
 
-Theme overrides for plugin views: `fenton-digital-badges/{view}.php` (e.g. `find.php`, `attestation.php`).
+Theme overrides for plugin views: `fendigibadge/{view}.php` or legacy `fenton-digital-badges/{view}.php` (e.g. `find.php`, `attestation.php`).
 
 ## Issuing
 

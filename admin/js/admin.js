@@ -6,11 +6,11 @@
 
 	function initLogoPicker($root) {
 		var frame;
-		var $input = $root.find('[data-db-logo-id]');
-		var $preview = $root.find('[data-db-logo-preview]');
-		var $select = $root.find('[data-db-logo-select]');
-		var $remove = $root.find('[data-db-logo-remove]');
-		var i18n = window.digitalBadgesAdmin || {};
+		var $input = $root.find('[data-fendigibadge-logo-id]');
+		var $preview = $root.find('[data-fendigibadge-logo-preview]');
+		var $select = $root.find('[data-fendigibadge-logo-select]');
+		var $remove = $root.find('[data-fendigibadge-logo-remove]');
+		var i18n = window.fendigibadgeAdmin || {};
 
 		$select.on('click', function (event) {
 			event.preventDefault();
@@ -56,7 +56,7 @@
 	}
 
 	$(function () {
-		$('[data-db-logo-picker]').each(function () {
+		$('[data-fendigibadge-logo-picker]').each(function () {
 			initLogoPicker($(this));
 		});
 	});
