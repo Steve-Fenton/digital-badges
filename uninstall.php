@@ -15,6 +15,7 @@ global $wpdb;
 
 delete_option( 'fendigibadge_issuer' );
 delete_option( 'fendigibadge_find_page_id' );
+delete_option( 'fendigibadge_attestation_page_id' );
 delete_option( 'fendigibadge_lookup_secret' );
 delete_option( 'fendigibadge_db_version' );
 

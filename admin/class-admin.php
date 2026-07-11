@@ -84,7 +84,17 @@ final class Admin {
 			Public_Facing::FIND_PAGE_OPTION,
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( self::class, 'sanitize_find_page_id' ),
+				'sanitize_callback' => array( self::class, 'sanitize_page_id' ),
+				'default'           => 0,
+			)
+		);
+
+		register_setting(
+			'fendigibadge_attestation_group',
+			Public_Facing::ATTESTATION_PAGE_OPTION,
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => array( self::class, 'sanitize_page_id' ),
 				'default'           => 0,
 			)
 		);
@@ -107,6 +117,16 @@ final class Admin {
 				echo '<p>' . esc_html__( 'Public lookup URL:', 'fenton-digital-badges' ) . ' <code><a href="' . esc_url( home_url( '/badges/find/' ) ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( home_url( '/badges/find/' ) ) . '</a></code></p>';
 			},
 			'fendigibadge-find'
+		);
+
+		add_settings_section(
+			'fendigibadge_attestation_section',
+			__( 'Attestation page', 'fenton-digital-badges' ),
+			static function (): void {
+				echo '<p>' . esc_html__( 'Optionally choose a WordPress page to supply the layout for /badges/assertion/{uid}/. Edit that page’s template in the Site Editor to control header, spacing, and chrome. The certificate is added automatically if the page does not already include the shortcode.', 'fenton-digital-badges' ) . '</p>';
+				echo '<p>' . esc_html__( 'Example URL:', 'fenton-digital-badges' ) . ' <code>' . esc_html( home_url( '/badges/assertion/{uid}/' ) ) . '</code></p>';
+			},
+			'fendigibadge-attestation'
 		);
 
 		$fields = array(
@@ -136,14 +156,22 @@ final class Admin {
 			'fendigibadge-find',
 			'fendigibadge_find_section'
 		);
+
+		add_settings_field(
+			'fendigibadge_attestation_page',
+			__( 'Page template', 'fenton-digital-badges' ),
+			array( self::class, 'render_attestation_page_field' ),
+			'fendigibadge-attestation',
+			'fendigibadge_attestation_section'
+		);
 	}
 
 	/**
-	 * Sanitize the Find badges page ID.
+	 * Sanitize a settings page ID.
 	 *
 	 * @param mixed $value Raw option value.
 	 */
-	public static function sanitize_find_page_id( $value ): int {
+	public static function sanitize_page_id( $value ): int {
 		$page_id = absint( $value );
 
 		if ( $page_id <= 0 ) {
@@ -163,19 +191,42 @@ final class Admin {
 	 * Render the Find badges page dropdown.
 	 */
 	public static function render_find_page_field(): void {
-		$selected = absint( get_option( Public_Facing::FIND_PAGE_OPTION, 0 ) );
+		self::render_page_dropdown(
+			Public_Facing::FIND_PAGE_OPTION,
+			'[fendigibadge_find]'
+		);
+	}
+
+	/**
+	 * Render the attestation page dropdown.
+	 */
+	public static function render_attestation_page_field(): void {
+		self::render_page_dropdown(
+			Public_Facing::ATTESTATION_PAGE_OPTION,
+			'[fendigibadge_attestation]'
+		);
+	}
+
+	/**
+	 * Render a page-template settings dropdown.
+	 *
+	 * @param string $option_key Option key for the selected page ID.
+	 * @param string $shortcode  Shortcode shown in the description.
+	 */
+	private static function render_page_dropdown( string $option_key, string $shortcode ): void {
+		$selected = absint( get_option( $option_key, 0 ) );
 
 		wp_dropdown_pages(
 			array(
-				'name'              => esc_attr( Public_Facing::FIND_PAGE_OPTION ),
-				'id'                => esc_attr( Public_Facing::FIND_PAGE_OPTION ),
+				'name'              => esc_attr( $option_key ),
+				'id'                => esc_attr( $option_key ),
 				'selected'          => esc_attr( (string) $selected ),
 				'show_option_none'  => esc_html__( '— Plugin default —', 'fenton-digital-badges' ),
 				'option_none_value' => '0',
 			)
 		);
 
-		echo '<p class="description">' . esc_html__( 'Leave as plugin default to use the built-in layout with your theme header and footer. Or use the shortcode', 'fenton-digital-badges' ) . ' <code>[fendigibadge_find]</code> ' . esc_html__( 'on any page.', 'fenton-digital-badges' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Leave as plugin default to use the built-in layout with your theme header and footer. Or use the shortcode', 'fenton-digital-badges' ) . ' <code>' . esc_html( $shortcode ) . '</code> ' . esc_html__( 'on the selected page.', 'fenton-digital-badges' ) . '</p>';
 	}
 
 	/**
@@ -280,6 +331,14 @@ final class Admin {
 				settings_fields( 'fendigibadge_find_group' );
 				do_settings_sections( 'fendigibadge-find' );
 				submit_button( __( 'Save find page', 'fenton-digital-badges' ) );
+				?>
+			</form>
+			<hr />
+			<form action="options.php" method="post">
+				<?php
+				settings_fields( 'fendigibadge_attestation_group' );
+				do_settings_sections( 'fendigibadge-attestation' );
+				submit_button( __( 'Save attestation page', 'fenton-digital-badges' ) );
 				?>
 			</form>
 		</div>

@@ -20,6 +20,14 @@
 	font-size: 1rem;
 }
 
+.fendigibadge-badge-find {
+	margin: 1.25rem 0 0;
+}
+
+.fendigibadge-badge-find__link {
+	font-weight: 600;
+}
+
 .fendigibadge-find {
 	max-width: 40rem;
 	margin: 2rem auto;
@@ -320,7 +328,6 @@
 	object-fit: contain;
 	border-radius: 4px;
 	background: #fff;
-	border: 1px solid var(--fendigibadge-border);
 }
 
 .fendigibadge-attestation-tools {

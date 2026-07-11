@@ -24,21 +24,70 @@ final class Public_Facing {
 	public const FIND_PAGE_OPTION = 'fendigibadge_find_page_id';
 
 	/**
+	 * Option key for the optional attestation WordPress page.
+	 */
+	public const ATTESTATION_PAGE_OPTION = 'fendigibadge_attestation_page_id';
+
+	/**
 	 * Wire public hooks.
 	 */
 	public static function init(): void {
 		add_action( 'template_redirect', array( self::class, 'maybe_prevent_find_cache' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_action( 'wp_head', array( self::class, 'maybe_output_og_tags' ), 5 );
+		add_filter( 'the_content', array( self::class, 'append_find_badge_link' ) );
 		add_shortcode( 'fendigibadge', array( self::class, 'render_badge_shortcode' ) );
 		add_shortcode( 'fendigibadge_find', array( self::class, 'render_find_shortcode' ) );
+		add_shortcode( 'fendigibadge_attestation', array( self::class, 'render_attestation_shortcode' ) );
+	}
+
+	/**
+	 * Public URL for the find-badges lookup form.
+	 */
+	public static function find_url(): string {
+		return home_url( '/badges/find/' );
+	}
+
+	/**
+	 * After the badge description on single badge pages, link to the find form.
+	 *
+	 * @param string $content Post content.
+	 */
+	public static function append_find_badge_link( string $content ): string {
+		if ( ! is_singular( Post_Types::BADGE ) || ! in_the_loop() || ! is_main_query() ) {
+			return $content;
+		}
+
+		$link = sprintf(
+			'<p class="fendigibadge-badge-find"><a class="fendigibadge-badge-find__link" href="%s">%s</a></p>',
+			esc_url( self::find_url() ),
+			esc_html__( "Check if you've earned this badge", 'fenton-digital-badges' )
+		);
+
+		return $content . "\n\n" . $link;
 	}
 
 	/**
 	 * Published page selected to host /badges/find/, if any.
 	 */
 	public static function get_find_page(): ?\WP_Post {
-		$page_id = absint( get_option( self::FIND_PAGE_OPTION, 0 ) );
+		return self::get_published_page( self::FIND_PAGE_OPTION );
+	}
+
+	/**
+	 * Published page selected to supply layout for /badges/assertion/{uid}/, if any.
+	 */
+	public static function get_attestation_page(): ?\WP_Post {
+		return self::get_published_page( self::ATTESTATION_PAGE_OPTION );
+	}
+
+	/**
+	 * Published page from an option key, if any.
+	 *
+	 * @param string $option_key Option storing a page ID.
+	 */
+	private static function get_published_page( string $option_key ): ?\WP_Post {
+		$page_id = absint( get_option( $option_key, 0 ) );
 
 		if ( $page_id <= 0 ) {
 			return null;
@@ -238,6 +287,32 @@ final class Public_Facing {
 		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- scoped template vars.
 		extract( $vars, EXTR_SKIP );
 		include self::locate_view( 'find' );
+
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Shortcode: [fendigibadge_attestation]
+	 *
+	 * Renders the current assertion when used on /badges/assertion/{uid}/
+	 * (including when a selected page supplies the template).
+	 */
+	public static function render_attestation_shortcode(): string {
+		if ( 'attestation' !== get_query_var( 'fendigibadge_ob' ) ) {
+			return '';
+		}
+
+		$uid  = sanitize_text_field( (string) get_query_var( 'fendigibadge_ob_uid' ) );
+		$vars = Ob_Endpoints::attestation_vars_for_uid( $uid );
+
+		if ( null === $vars ) {
+			return '';
+		}
+
+		ob_start();
+		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- scoped template vars.
+		extract( $vars, EXTR_SKIP );
+		include self::locate_view( 'attestation' );
 
 		return (string) ob_get_clean();
 	}

@@ -158,10 +158,10 @@ final class Ob_Endpoints {
 	 * Serve public attestation HTML page.
 	 */
 	private static function serve_attestation_page(): void {
-		$uid = sanitize_text_field( (string) get_query_var( 'fendigibadge_ob_uid' ) );
-		$row = Assertion_Repository::find_by_uid( $uid );
+		$uid  = sanitize_text_field( (string) get_query_var( 'fendigibadge_ob_uid' ) );
+		$vars = self::attestation_vars_for_uid( $uid );
 
-		if ( null === $row || ! empty( $row->revoked ) ) {
+		if ( null === $vars ) {
 			global $wp_query;
 			$wp_query->set_404();
 			status_header( 404 );
@@ -170,15 +170,35 @@ final class Ob_Endpoints {
 			exit;
 		}
 
+		$page = Public_Facing::get_attestation_page();
+		if ( $page instanceof \WP_Post ) {
+			self::render_attestation_as_page( $page, $vars );
+			return;
+		}
+
+		self::render_view( 'attestation', $vars );
+	}
+
+	/**
+	 * Build template vars for an attestation page, or null when unavailable.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	public static function attestation_vars_for_uid( string $uid ): ?array {
+		if ( '' === $uid ) {
+			return null;
+		}
+
+		$row = Assertion_Repository::find_by_uid( $uid );
+
+		if ( null === $row || ! empty( $row->revoked ) ) {
+			return null;
+		}
+
 		$badge = get_post( (int) $row->badge_post_id );
 
 		if ( ! $badge || Post_Types::BADGE !== $badge->post_type ) {
-			global $wp_query;
-			$wp_query->set_404();
-			status_header( 404 );
-			nocache_headers();
-			include get_query_template( '404' );
-			exit;
+			return null;
 		}
 
 		$issuer          = Issuer::get();
@@ -192,25 +212,119 @@ final class Ob_Endpoints {
 			? (string) wp_json_encode( $assertion_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES )
 			: '';
 
-		self::render_view(
-			'attestation',
-			array(
-				'assertion'       => $row,
-				'badge'           => $badge,
-				'issuer'          => $issuer,
-				'linkedin_url'    => $linkedin_url,
-				'attestation_url' => $attestation_url,
-				'json_url'        => $json_url,
-				'image_url'       => $image_url,
-				'assertion_json'  => $assertion_json,
-				'share_text'      => sprintf(
-					/* translators: 1: badge name, 2: issuer name */
-					__( 'I earned the %1$s badge from %2$s', 'fenton-digital-badges' ),
-					get_the_title( $badge ),
-					$issuer['name'] !== '' ? $issuer['name'] : get_bloginfo( 'name' )
-				),
-			)
+		return array(
+			'assertion'       => $row,
+			'badge'           => $badge,
+			'issuer'          => $issuer,
+			'linkedin_url'    => $linkedin_url,
+			'attestation_url' => $attestation_url,
+			'json_url'        => $json_url,
+			'image_url'       => $image_url,
+			'assertion_json'  => $assertion_json,
+			'share_text'      => sprintf(
+				/* translators: 1: badge name, 2: issuer name */
+				__( 'I earned the %1$s badge from %2$s', 'fenton-digital-badges' ),
+				get_the_title( $badge ),
+				$issuer['name'] !== '' ? $issuer['name'] : get_bloginfo( 'name' )
+			),
 		);
+	}
+
+	/**
+	 * Render /badges/assertion/{uid}/ using a selected WordPress page and its template.
+	 *
+	 * Keeps the assertion URL while letting Site Editor / page templates control
+	 * chrome and layout. Injects the attestation shortcode when the page content
+	 * does not already include it.
+	 *
+	 * @param \WP_Post             $page Page supplying the template.
+	 * @param array<string, mixed> $vars Attestation template vars.
+	 */
+	private static function render_attestation_as_page( \WP_Post $page, array $vars ): void {
+		global $wp_query, $post;
+
+		$post = $page;
+
+		if ( $wp_query instanceof \WP_Query ) {
+			$wp_query->init_query_flags();
+			$wp_query->is_page           = true;
+			$wp_query->is_singular       = true;
+			$wp_query->is_404            = false;
+			$wp_query->is_home           = false;
+			$wp_query->is_front_page     = false;
+			$wp_query->is_single         = false;
+			$wp_query->is_archive        = false;
+			$wp_query->posts             = array( $page );
+			$wp_query->post              = $page;
+			$wp_query->post_count        = 1;
+			$wp_query->found_posts       = 1;
+			$wp_query->max_num_pages     = 1;
+			$wp_query->queried_object    = $page;
+			$wp_query->queried_object_id = (int) $page->ID;
+		}
+
+		setup_postdata( $page );
+
+		add_filter( 'the_content', array( self::class, 'maybe_append_attestation_shortcode' ), 5 );
+
+		$attestation_url = isset( $vars['attestation_url'] ) && is_string( $vars['attestation_url'] )
+			? $vars['attestation_url']
+			: '';
+		$title = ( isset( $vars['badge'] ) && $vars['badge'] instanceof \WP_Post )
+			? get_the_title( $vars['badge'] )
+			: '';
+
+		remove_action( 'wp_head', 'rel_canonical' );
+		if ( '' !== $attestation_url ) {
+			add_action(
+				'wp_head',
+				static function () use ( $attestation_url ): void {
+					printf( '<link rel="canonical" href="%s" />' . "\n", esc_url( $attestation_url ) );
+				},
+				2
+			);
+		}
+
+		if ( '' !== $title ) {
+			add_filter(
+				'pre_get_document_title',
+				static function () use ( $title ): string {
+					return $title;
+				},
+				999
+			);
+		}
+
+		Public_Facing::enqueue_assets();
+		add_action( 'wp_head', array( self::class, 'print_public_styles' ), 5 );
+		add_action( 'wp_footer', array( self::class, 'print_public_scripts' ), 20 );
+
+		status_header( 200 );
+		nocache_headers();
+
+		$template = get_page_template();
+
+		if ( ! is_string( $template ) || '' === $template || ! is_readable( $template ) ) {
+			remove_filter( 'the_content', array( self::class, 'maybe_append_attestation_shortcode' ), 5 );
+			self::render_view( 'attestation', $vars );
+			return;
+		}
+
+		include $template;
+		exit;
+	}
+
+	/**
+	 * Ensure the selected attestation page outputs the certificate markup.
+	 *
+	 * @param string $content Post content.
+	 */
+	public static function maybe_append_attestation_shortcode( string $content ): string {
+		if ( has_shortcode( $content, 'fendigibadge_attestation' ) ) {
+			return $content;
+		}
+
+		return $content . "\n\n[fendigibadge_attestation]";
 	}
 
 	/**

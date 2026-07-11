@@ -4,7 +4,7 @@ Tags: badges, open badges, credentials, certificates, linkedin
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.20
+Stable tag: 0.1.22
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,12 +30,13 @@ You can add templates for the badge pages using `/wp-admin/site-editor.php?p=%2F
 * Click "Add Template"
 * Select "Single item: Badge" or "Archive: Badge"
 
-To control the layout of `/badges/find/`, create a Page, optionally add `[fendigibadge_find]`, then choose that page under **Badges → Settings → Find badges page**. Edit the page’s template in the Site Editor. Themes can also override the form markup with `fendigibadge/find.php`.
+To control the layout of `/badges/find/` or `/badges/assertion/{uid}/`, create a Page, optionally add `[fendigibadge_find]` or `[fendigibadge_attestation]`, then choose that page under **Badges → Settings**. Edit the page’s template in the Site Editor. Themes can also override the markup with `fendigibadge/find.php` or `fendigibadge/attestation.php`.
 
 **Shortcodes**
 
 * `[fendigibadge id="123"]` — display a badge
 * `[fendigibadge_find]` — email lookup form (also available at `/badges/find/`)
+* `[fendigibadge_attestation]` — certificate markup on `/badges/assertion/{uid}/` when using a page template
 
 **Public endpoints**
 

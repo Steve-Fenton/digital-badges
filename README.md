@@ -43,7 +43,7 @@ flowchart LR
 | BadgeClass | `/ob/badges/{id}.json` |
 | Assertion | `/ob/assertions/{uid}.json` |
 | Find badges | `/badges/find/` or `[fendigibadge_find]` (optional page template via **Badges → Settings**) |
-| Attestation | `/badges/assertion/{uid}/` |
+| Attestation | `/badges/assertion/{uid}/` or `[fendigibadge_attestation]` (optional page template via **Badges → Settings**) |
 
 Theme overrides for plugin views: `fendigibadge/{view}.php` (e.g. `find.php`, `attestation.php`).
 
