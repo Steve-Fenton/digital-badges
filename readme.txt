@@ -4,7 +4,7 @@ Tags: badges, open badges, credentials, certificates, linkedin
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.27
+Stable tag: 0.1.29
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,8 +22,9 @@ Fenton Digital Badges lets you issue [Open Badges 1.0](https://github.com/mozill
 * Public Open Badges JSON endpoints for issuer, badge class, and assertion
 * Public attestation pages with share, download, and LinkedIn Add to Profile
 * Email lookup so earners can request links to badges issued to them (avoids revealing whether an address has badges)
+* Find-badges emails include a secure link to stop future notifications
 * Assertions list with revoke, restore, and delete (revoked only)
-* Recipient emails are salted/hashed — plaintext emails are never stored
+* Recipient emails are salted/hashed — plaintext emails are not stored on assertions (unsubscribe opt-outs are an exception)
 
 You can add templates for the badge pages using `/wp-admin/site-editor.php?p=%2Ftemplate` on your site.
 
@@ -46,6 +47,7 @@ To control the layout of `/badges/find/` or `/badges/assertion/{uid}/`, create a
 * Attestation page: `/badges/assertion/{uid}/`
 * Find badges: `/badges/find/`
 * Claim name: `/badges/claim-name/{token}/`
+* Unsubscribe: `/badges/unsubscribe/{token}/`
 
 == Installation ==
 
@@ -63,21 +65,29 @@ Columns: `email` (required), `name`, `evidence`, `expires` (YYYY-MM-DD). A heade
 
 = Are recipient emails stored? =
 
-No. Emails are salted and hashed for the assertion identity and looked up via a separate HMAC. Plaintext emails are never stored.
+No, not on assertions. Emails are salted and hashed for the assertion identity and looked up via a separate HMAC. The only plaintext emails kept are addresses that opted out of find-badges notifications via the unsubscribe link.
 
 = How does the find badges form work? =
 
-Enter the email used when the badge was issued. The form always shows the same confirmation message so it does not reveal whether an address has badges. If matches exist, attestation URLs are emailed to that address.
+Enter the email used when the badge was issued. The form always shows the same confirmation message so it does not reveal whether an address has badges. If matches exist, attestation URLs are emailed to that address. Unsubscribed addresses are ignored before lookup.
 
 = What happens if a recipient name is omitted? =
 
 The attestation page still verifies the badge, but shows a generic completion message instead of naming the earner. When the earner uses Find your badges, the email includes a one-time link to claim the certificate and add their name. The link asks them to confirm the name before saving, then stops working.
+
+= How do I stop find-badges emails? =
+
+Each find-badges email ends with a “Stop all future notifications” link. Using it adds that address to an unsubscribe list (only when the address still matches at least one badge). Later find requests for that address are ignored.
 
 = Does this support Open Badges 2.0 / 3.0? =
 
 This release implements Open Badges 1.0 JSON endpoints and assertions.
 
 == Changelog ==
+
+= 0.1.28 =
+* Find-badges emails include a secure “Stop all future notifications” unsubscribe link.
+* Unsubscribed addresses are ignored before email lookup hashing.
 
 = 0.1.23 =
 * Find-badges emails include a one-time link to add a missing recipient name, with confirm-before-save.

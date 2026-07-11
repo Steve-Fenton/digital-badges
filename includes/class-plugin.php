@@ -54,6 +54,7 @@ final class Plugin {
 		require_once FENDIGIBADGE_PATH . 'includes/class-badge-class.php';
 		require_once FENDIGIBADGE_PATH . 'includes/class-assertion-repository.php';
 		require_once FENDIGIBADGE_PATH . 'includes/class-name-claim.php';
+		require_once FENDIGIBADGE_PATH . 'includes/class-email-unsubscribe.php';
 		require_once FENDIGIBADGE_PATH . 'includes/class-csv-issuer.php';
 		require_once FENDIGIBADGE_PATH . 'includes/class-linkedin.php';
 		require_once FENDIGIBADGE_PATH . 'includes/class-ob-endpoints.php';

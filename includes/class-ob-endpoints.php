@@ -57,6 +57,7 @@ final class Ob_Endpoints {
 		add_rewrite_rule( '^badges/assertion/([^/]+)/?$', 'index.php?fendigibadge_ob=attestation&fendigibadge_ob_uid=$matches[1]', 'top' );
 		add_rewrite_rule( '^badges/find/?$', 'index.php?fendigibadge_ob=find', 'top' );
 		add_rewrite_rule( '^badges/claim-name/([^/]+)/?$', 'index.php?fendigibadge_ob=claim_name&fendigibadge_ob_token=$matches[1]', 'top' );
+		add_rewrite_rule( '^badges/unsubscribe/([^/]+)/?$', 'index.php?fendigibadge_ob=unsubscribe&fendigibadge_ob_token=$matches[1]', 'top' );
 	}
 
 	/**
@@ -102,6 +103,9 @@ final class Ob_Endpoints {
 				break;
 			case 'claim_name':
 				self::serve_claim_name_page();
+				break;
+			case 'unsubscribe':
+				self::serve_unsubscribe_page();
 				break;
 		}
 	}
@@ -330,6 +334,25 @@ final class Ob_Endpoints {
 		}
 
 		return $content . "\n\n[fendigibadge_attestation]";
+	}
+
+	/**
+	 * Serve the find-badges email unsubscribe page.
+	 */
+	private static function serve_unsubscribe_page(): void {
+		self::prevent_caching();
+
+		$token = sanitize_text_field( (string) get_query_var( 'fendigibadge_ob_token' ) );
+		$token = rawurldecode( $token );
+
+		$success = Email_Unsubscribe::process_token( $token );
+
+		self::render_view(
+			'unsubscribe',
+			array(
+				'fendigibadge_success' => $success,
+			)
+		);
 	}
 
 	/**
@@ -656,6 +679,13 @@ final class Ob_Endpoints {
 			return;
 		}
 
+		// Checked before hashing so opted-out addresses are never used for lookup.
+		if ( Email_Unsubscribe::is_unsubscribed( $email ) ) {
+			$cached_error = $error;
+			unset( $email );
+			return;
+		}
+
 		// Simple transient rate limit by IP.
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
 		$key = 'fendigibadge_find_' . md5( $ip );
@@ -764,7 +794,15 @@ final class Ob_Endpoints {
 
 		$body  = $intro;
 		$body .= "\n\n" . implode( "\n\n", $blocks );
-		$body .= "\n\n" . $signoff . "\n";
+		$body .= "\n\n" . $signoff;
+
+		$unsubscribe_url = Email_Unsubscribe::unsubscribe_url( $email );
+		if ( '' !== $unsubscribe_url ) {
+			$body .= "\n\n" . __( 'Stop all future notifications', 'fenton-digital-badges' );
+			$body .= "\n" . $unsubscribe_url;
+		}
+
+		$body .= "\n";
 
 		$from_email    = $issuer['sending_email'];
 		$from_name     = $issuer['sending_display_name'];

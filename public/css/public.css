@@ -215,7 +215,6 @@
 .fendigibadge-claim-name__confirm-label {
 	margin: 0 0 0.35rem;
 	font-size: 0.9rem;
-	color: #444;
 }
 
 .fendigibadge-claim-name__confirm-name {
@@ -227,7 +226,21 @@
 .fendigibadge-claim-name__confirm-hint {
 	margin: 0;
 	font-size: 0.9rem;
-	color: #444;
+}
+
+.fendigibadge-unsubscribe {
+	max-width: 40rem;
+	margin: 2rem auto;
+	padding: 0 1rem;
+}
+
+.fendigibadge-unsubscribe__title {
+	margin: 0 0 0.5rem;
+	font-size: 1.75rem;
+}
+
+.fendigibadge-unsubscribe__notice {
+	margin-top: 1rem;
 }
 
 /* -------------------------------------------------------------------------
