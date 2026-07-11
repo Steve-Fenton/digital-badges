@@ -4,7 +4,7 @@ Tags: badges, open badges, credentials, certificates, linkedin
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.29
+Stable tag: 0.1.30
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,7 +69,7 @@ No, not on assertions. Emails are salted and hashed for the assertion identity a
 
 = How does the find badges form work? =
 
-Enter the email used when the badge was issued. The form always shows the same confirmation message so it does not reveal whether an address has badges. If matches exist, attestation URLs are emailed to that address. Unsubscribed addresses are ignored before lookup.
+Enter the email used when the badge was issued. The form always shows the same confirmation message so it does not reveal whether an address has badges. If matches exist, attestation URLs are emailed to that address. Unsubscribed addresses are ignored before lookup. Submissions are rate-limited per IP (to limit probing many addresses) and per email (to limit repeat requests for the same address).
 
 = What happens if a recipient name is omitted? =
 
@@ -84,6 +84,9 @@ Each find-badges email ends with a “Stop all future notifications” link. Usi
 This release implements Open Badges 1.0 JSON endpoints and assertions.
 
 == Changelog ==
+
+= 0.1.29 =
+* Tightened find-badges rate limits: 8 submissions per IP per 10 minutes, and one lookup per email every 30 minutes.
 
 = 0.1.28 =
 * Find-badges emails include a secure “Stop all future notifications” unsubscribe link.

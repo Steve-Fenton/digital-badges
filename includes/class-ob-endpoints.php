@@ -642,75 +642,91 @@ final class Ob_Endpoints {
 		nocache_headers();
 	}
 
-	/**
-	 * Process email lookup POST (shared by page + shortcode).
-	 *
-	 * Always shows the same success path in the UI to avoid email enumeration.
-	 * When matching badges exist, their attestation URLs are emailed to the address.
-	 * Runs at most once per request so a double-rendered shortcode cannot send twice.
-	 *
-	 * @param string $error Error message by reference.
-	 */
-	public static function process_lookup_request( string &$error ): void {
-		static $processed = false;
-		static $cached_error = '';
+/**
+ * Process email lookup POST (shared by page + shortcode).
+ *
+ * Always shows the same success path in the UI to avoid email enumeration.
+ * When matching badges exist, their attestation URLs are emailed to the address.
+ * Runs at most once per request so a double-rendered shortcode cannot send twice.
+ *
+ * Limits:
+ * - Per IP: at most 8 submissions per 10 minutes (explicit error).
+ * - Per email: at most one lookup every 30 minutes (same success UI; no re-send).
+ *
+ * @param string $error Error message by reference.
+ */
+public static function process_lookup_request( string &$error ): void {
+	static $processed = false;
+	static $cached_error = '';
 
-		if ( $processed ) {
-			$error = $cached_error;
-			return;
-		}
-
-		$processed = true;
-		$error     = '';
-
-		$nonce = isset( $_POST['fendigibadge_find_nonce'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_find_nonce'] ) ) : '';
-
-		if ( ! wp_verify_nonce( $nonce, 'fendigibadge_find_badges' ) ) {
-			$error         = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
-			$cached_error  = $error;
-			return;
-		}
-
-		$email = isset( $_POST['fendigibadge_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['fendigibadge_email'] ) ) : '';
-
-		if ( ! Identity::is_valid_email( $email ) ) {
-			$error         = __( 'Please enter a valid email address.', 'fenton-digital-badges' );
-			$cached_error  = $error;
-			return;
-		}
-
-		// Checked before hashing so opted-out addresses are never used for lookup.
-		if ( Email_Unsubscribe::is_unsubscribed( $email ) ) {
-			$cached_error = $error;
-			unset( $email );
-			return;
-		}
-
-		// Simple transient rate limit by IP.
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
-		$key = 'fendigibadge_find_' . md5( $ip );
-		$hits = (int) get_transient( $key );
-
-		if ( $hits >= 20 ) {
-			$error         = __( 'Too many lookups. Please wait a few minutes and try again.', 'fenton-digital-badges' );
-			$cached_error  = $error;
-			return;
-		}
-
-		set_transient( $key, $hits + 1, 10 * MINUTE_IN_SECONDS );
-
-		$lookup  = Identity::lookup_hash( $email );
-		$results = Assertion_Repository::find_by_lookup( $lookup );
-
-		if ( array() !== $results ) {
-			self::send_lookup_email( $email, $results );
-		}
-
-		$cached_error = $error;
-
-		// Discard plaintext email after use.
-		unset( $email );
+	if ( $processed ) {
+		$error = $cached_error;
+		return;
 	}
+
+	$processed = true;
+	$error     = '';
+
+	$nonce = isset( $_POST['fendigibadge_find_nonce'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_find_nonce'] ) ) : '';
+
+	if ( ! wp_verify_nonce( $nonce, 'fendigibadge_find_badges' ) ) {
+		$error         = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
+		$cached_error  = $error;
+		return;
+	}
+
+	$email = isset( $_POST['fendigibadge_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['fendigibadge_email'] ) ) : '';
+
+	if ( ! Identity::is_valid_email( $email ) ) {
+		$error         = __( 'Please enter a valid email address.', 'fenton-digital-badges' );
+		$cached_error  = $error;
+		return;
+	}
+
+	// Per-IP limit first so probing many addresses still burns quota.
+	$ip      = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
+	$ip_key  = 'fendigibadge_find_ip_' . md5( $ip );
+	$ip_hits = (int) get_transient( $ip_key );
+
+	if ( $ip_hits >= 8 ) {
+		$error        = __( 'Too many lookups. Please wait a few minutes and try again.', 'fenton-digital-badges' );
+		$cached_error = $error;
+		unset( $email );
+		return;
+	}
+
+	set_transient( $ip_key, $ip_hits + 1, 10 * MINUTE_IN_SECONDS );
+
+	// Checked before hashing so opted-out addresses are never used for lookup.
+	if ( Email_Unsubscribe::is_unsubscribed( $email ) ) {
+		$cached_error = $error;
+		unset( $email );
+		return;
+	}
+
+	$lookup = Identity::lookup_hash( $email );
+
+	// Same-address cooldown: keep the usual success message (no enumeration leak).
+	$email_key = 'fendigibadge_find_em_' . $lookup;
+	if ( false !== get_transient( $email_key ) ) {
+		$cached_error = $error;
+		unset( $email, $lookup );
+		return;
+	}
+
+	set_transient( $email_key, 1, 30 * MINUTE_IN_SECONDS );
+
+	$results = Assertion_Repository::find_by_lookup( $lookup );
+
+	if ( array() !== $results ) {
+		self::send_lookup_email( $email, $results );
+	}
+
+	$cached_error = $error;
+
+	// Discard plaintext email after use.
+	unset( $email, $lookup );
+}
 
 	/**
 	 * Email attestation URLs for badges found via the public lookup form.
