@@ -798,7 +798,7 @@ final class Ob_Endpoints {
 
 		$unsubscribe_url = Email_Unsubscribe::unsubscribe_url( $email );
 		if ( '' !== $unsubscribe_url ) {
-			$body .= "\n\n" . __( 'Stop all future notifications', 'fenton-digital-badges' );
+			$body .= "\n\n" . __( 'You can stop all future badge notifications by clicking the link below:', 'fenton-digital-badges' );
 			$body .= "\n" . $unsubscribe_url;
 		}
 
