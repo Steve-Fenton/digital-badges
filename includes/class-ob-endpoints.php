@@ -56,6 +56,7 @@ final class Ob_Endpoints {
 		add_rewrite_rule( '^ob/assertions/([^/]+)\.json$', 'index.php?fendigibadge_ob=assertion&fendigibadge_ob_uid=$matches[1]', 'top' );
 		add_rewrite_rule( '^badges/assertion/([^/]+)/?$', 'index.php?fendigibadge_ob=attestation&fendigibadge_ob_uid=$matches[1]', 'top' );
 		add_rewrite_rule( '^badges/find/?$', 'index.php?fendigibadge_ob=find', 'top' );
+		add_rewrite_rule( '^badges/claim-name/([^/]+)/?$', 'index.php?fendigibadge_ob=claim_name&fendigibadge_ob_token=$matches[1]', 'top' );
 	}
 
 	/**
@@ -68,6 +69,7 @@ final class Ob_Endpoints {
 		$vars[] = 'fendigibadge_ob';
 		$vars[] = 'fendigibadge_ob_id';
 		$vars[] = 'fendigibadge_ob_uid';
+		$vars[] = 'fendigibadge_ob_token';
 
 		return $vars;
 	}
@@ -97,6 +99,9 @@ final class Ob_Endpoints {
 				break;
 			case 'find':
 				self::serve_find_page();
+				break;
+			case 'claim_name':
+				self::serve_claim_name_page();
 				break;
 		}
 	}
@@ -328,6 +333,142 @@ final class Ob_Endpoints {
 	}
 
 	/**
+	 * Serve the one-time name claim page.
+	 */
+	private static function serve_claim_name_page(): void {
+		self::prevent_caching();
+
+		$token_from_url = Name_Claim::normalize_token(
+			sanitize_text_field( (string) get_query_var( 'fendigibadge_ob_token' ) )
+		);
+
+		$error           = '';
+		$step            = 'invalid';
+		$token           = $token_from_url;
+		$name            = '';
+		$badge_title     = '';
+		$attestation_url = '';
+		$form_action     = '' !== $token_from_url
+			? Name_Claim::claim_url( $token_from_url )
+			: home_url( '/badges/claim-name/' );
+
+		$request_method = isset( $_SERVER['REQUEST_METHOD'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) )
+			: '';
+
+		if ( 'POST' === $request_method ) {
+			self::process_claim_name_request( $error, $step, $token, $name, $badge_title, $attestation_url, $form_action );
+		} else {
+			$row = Name_Claim::find_assertion( $token_from_url );
+
+			if ( null !== $row ) {
+				$step            = 'enter';
+				$token           = $token_from_url;
+				$form_action     = Name_Claim::claim_url( $token_from_url );
+				$attestation_url = Assertion_Repository::attestation_url( (string) $row->uid );
+				$badge           = get_post( (int) $row->badge_post_id );
+				$badge_title     = ( $badge instanceof \WP_Post ) ? get_the_title( $badge ) : '';
+			}
+		}
+
+		self::render_view(
+			'claim-name',
+			array(
+				'error'           => $error,
+				'step'            => $step,
+				'token'           => $token,
+				'name'            => $name,
+				'badge_title'     => $badge_title,
+				'form_action'     => $form_action,
+				'attestation_url' => $attestation_url,
+			)
+		);
+	}
+
+	/**
+	 * Process name-claim POST (preview / edit / confirm).
+	 *
+	 * @param string $error           Error message by reference.
+	 * @param string $step            UI step by reference.
+	 * @param string $token           Active token by reference.
+	 * @param string $name            Submitted name by reference.
+	 * @param string $badge_title     Badge title by reference.
+	 * @param string $attestation_url Attestation URL by reference.
+	 * @param string $form_action     Form action URL by reference.
+	 */
+	private static function process_claim_name_request(
+		string &$error,
+		string &$step,
+		string &$token,
+		string &$name,
+		string &$badge_title,
+		string &$attestation_url,
+		string &$form_action
+	): void {
+		$error = '';
+		$step  = 'invalid';
+
+		$nonce = isset( $_POST['fendigibadge_claim_name_nonce'] )
+			? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_claim_name_nonce'] ) )
+			: '';
+
+		if ( ! wp_verify_nonce( $nonce, 'fendigibadge_claim_name' ) ) {
+			$error = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
+			return;
+		}
+
+		$token = Name_Claim::normalize_token(
+			isset( $_POST['fendigibadge_claim_token'] )
+				? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_claim_token'] ) )
+				: ''
+		);
+		$name = isset( $_POST['fendigibadge_claim_name'] )
+			? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_claim_name'] ) )
+			: '';
+		$action = isset( $_POST['fendigibadge_claim_action'] )
+			? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_claim_action'] ) )
+			: 'preview';
+
+		$row = Name_Claim::find_assertion( $token );
+
+		if ( null === $row ) {
+			$error = __( 'This link is invalid, has already been used, or has expired.', 'fenton-digital-badges' );
+			$step  = 'invalid';
+			return;
+		}
+
+		$form_action     = Name_Claim::claim_url( $token );
+		$attestation_url = Assertion_Repository::attestation_url( (string) $row->uid );
+		$badge           = get_post( (int) $row->badge_post_id );
+		$badge_title     = ( $badge instanceof \WP_Post ) ? get_the_title( $badge ) : '';
+
+		if ( 'edit' === $action ) {
+			$step = 'enter';
+			return;
+		}
+
+		if ( '' === $name ) {
+			$error = __( 'Please enter your name.', 'fenton-digital-badges' );
+			$step  = 'enter';
+			return;
+		}
+
+		if ( 'confirm' === $action ) {
+			if ( ! Name_Claim::confirm_name( $token, $name ) ) {
+				$error = __( 'We could not save your name. The link may have already been used.', 'fenton-digital-badges' );
+				$step  = 'invalid';
+				return;
+			}
+
+			$step = 'done';
+			return;
+		}
+
+		// Default: preview / confirm step.
+		$step = 'confirm';
+	}
+
+	/**
 	 * Serve find-badges page (also used by shortcode via Public_Facing).
 	 */
 	private static function serve_find_page(): void {
@@ -553,9 +694,18 @@ final class Ob_Endpoints {
 				continue;
 			}
 
+			$claim_url = '';
+			if ( '' === trim( (string) ( $row->recipient_name ?? '' ) ) ) {
+				$claim_token = Name_Claim::issue_for_assertion( $row );
+				if ( is_string( $claim_token ) && '' !== $claim_token ) {
+					$claim_url = Name_Claim::claim_url( $claim_token );
+				}
+			}
+
 			$entries[] = array(
-				'name' => '' !== $name ? $name : $uid,
-				'url'  => $url,
+				'name'      => '' !== $name ? $name : $uid,
+				'url'       => $url,
+				'claim_url' => $claim_url,
 			);
 		}
 
@@ -571,7 +721,14 @@ final class Ob_Endpoints {
 
 		$blocks = array();
 		foreach ( $entries as $entry ) {
-			$blocks[] = $entry['name'] . "\n" . $entry['url'];
+			$block = $entry['name'] . "\n" . $entry['url'];
+
+			if ( '' !== $entry['claim_url'] ) {
+				$block .= "\n\n" . __( 'Claim your certificate and add your name with the following one-time link:', 'fenton-digital-badges' );
+				$block .= "\n" . $entry['claim_url'];
+			}
+
+			$blocks[] = $block;
 		}
 
 		$body  = sprintf(
@@ -677,6 +834,11 @@ final class Ob_Endpoints {
 		} elseif ( 'find' === $view ) {
 			$title = __( 'Find your badges', 'fenton-digital-badges' );
 			$canonical = home_url( '/badges/find/' );
+		} elseif ( 'claim-name' === $view ) {
+			$title = __( 'Add your name', 'fenton-digital-badges' );
+			if ( isset( $vars['form_action'] ) && is_string( $vars['form_action'] ) && '' !== $vars['form_action'] ) {
+				$canonical = $vars['form_action'];
+			}
 		}
 
 		if ( isset( $vars['attestation_url'] ) && is_string( $vars['attestation_url'] ) ) {

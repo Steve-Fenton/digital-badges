@@ -4,7 +4,7 @@ Tags: badges, open badges, credentials, certificates, linkedin
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.22
+Stable tag: 0.1.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -45,6 +45,7 @@ To control the layout of `/badges/find/` or `/badges/assertion/{uid}/`, create a
 * Assertion JSON: `/ob/assertions/{uid}.json`
 * Attestation page: `/badges/assertion/{uid}/`
 * Find badges: `/badges/find/`
+* Claim name: `/badges/claim-name/{token}/`
 
 == Installation ==
 
@@ -70,13 +71,16 @@ Enter the email used when the badge was issued. The form always shows the same c
 
 = What happens if a recipient name is omitted? =
 
-The attestation page still verifies the badge, but shows a generic completion message instead of naming the earner.
+The attestation page still verifies the badge, but shows a generic completion message instead of naming the earner. When the earner uses Find your badges, the email includes a one-time link to claim the certificate and add their name. The link asks them to confirm the name before saving, then stops working.
 
 = Does this support Open Badges 2.0 / 3.0? =
 
 This release implements Open Badges 1.0 JSON endpoints and assertions.
 
 == Changelog ==
+
+= 0.1.23 =
+* Find-badges emails include a one-time link to add a missing recipient name, with confirm-before-save.
 
 = 0.1.19 =
 * Renamed internal prefixes to `fendigibadge` for WordPress.org plugin review compliance.

@@ -53,6 +53,8 @@ final class Assertion_Repository {
 			recipient_salt varchar(128) NOT NULL,
 			recipient_lookup varchar(64) NOT NULL,
 			recipient_name varchar(255) NOT NULL DEFAULT '',
+			name_claim_token varchar(64) NULL,
+			name_claim_expires datetime NULL,
 			evidence_url text NULL,
 			issued_on datetime NOT NULL,
 			expires datetime NULL,
@@ -61,6 +63,7 @@ final class Assertion_Repository {
 			created_at datetime NOT NULL,
 			PRIMARY KEY  (id),
 			UNIQUE KEY uid (uid),
+			UNIQUE KEY name_claim_token (name_claim_token),
 			KEY recipient_lookup (recipient_lookup),
 			KEY badge_post_id (badge_post_id),
 			KEY issued_on (issued_on)
@@ -153,6 +156,92 @@ final class Assertion_Repository {
 		);
 
 		return $row instanceof \stdClass ? $row : null;
+	}
+
+	/**
+	 * Find an assertion by an unused name-claim token that has not expired.
+	 */
+	public static function find_by_name_claim_token( string $token ): ?object {
+		global $wpdb;
+
+		if ( '' === $token ) {
+			return null;
+		}
+
+		$now = current_time( 'mysql', true );
+
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE name_claim_token = %s AND name_claim_expires IS NOT NULL AND name_claim_expires >= %s AND revoked = 0 LIMIT 1',
+				self::table_name(),
+				$token,
+				$now
+			)
+		);
+
+		return $row instanceof \stdClass ? $row : null;
+	}
+
+	/**
+	 * Store a one-time name-claim token on an assertion.
+	 */
+	public static function set_name_claim_token( string $uid, string $token, string $expires_mysql ): bool {
+		global $wpdb;
+
+		$updated = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE %i SET name_claim_token = %s, name_claim_expires = %s WHERE uid = %s AND revoked = 0 AND (recipient_name = '' OR recipient_name IS NULL)",
+				self::table_name(),
+				$token,
+				$expires_mysql,
+				$uid
+			)
+		);
+
+		return false !== $updated && (int) $updated > 0;
+	}
+
+	/**
+	 * Clear the name-claim token so the link can no longer be used.
+	 */
+	public static function clear_name_claim_token( string $uid ): bool {
+		global $wpdb;
+
+		$updated = $wpdb->query(
+			$wpdb->prepare(
+				'UPDATE %i SET name_claim_token = NULL, name_claim_expires = NULL WHERE uid = %s',
+				self::table_name(),
+				$uid
+			)
+		);
+
+		return false !== $updated;
+	}
+
+	/**
+	 * Set recipient_name when it is currently empty. Clears any name-claim token.
+	 *
+	 * @return bool True when the name was saved.
+	 */
+	public static function update_recipient_name( string $uid, string $name ): bool {
+		global $wpdb;
+
+		$name = sanitize_text_field( $name );
+
+		if ( '' === $uid || '' === $name ) {
+			return false;
+		}
+
+		$updated = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE %i SET recipient_name = %s, name_claim_token = NULL, name_claim_expires = NULL WHERE uid = %s AND revoked = 0 AND (recipient_name = '' OR recipient_name IS NULL)",
+				self::table_name(),
+				$name,
+				$uid
+			)
+		);
+
+		return false !== $updated && (int) $updated > 0;
 	}
 
 	/**
