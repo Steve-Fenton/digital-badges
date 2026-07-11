@@ -374,13 +374,13 @@ final class Ob_Endpoints {
 		self::render_view(
 			'claim-name',
 			array(
-				'error'           => $error,
-				'step'            => $step,
-				'token'           => $token,
-				'name'            => $name,
-				'badge_title'     => $badge_title,
-				'form_action'     => $form_action,
-				'attestation_url' => $attestation_url,
+				'fendigibadge_error'           => $error,
+				'fendigibadge_step'            => $step,
+				'fendigibadge_token'           => $token,
+				'fendigibadge_name'            => $name,
+				'fendigibadge_badge_title'     => $badge_title,
+				'fendigibadge_form_action'     => $form_action,
+				'fendigibadge_attestation_url' => $attestation_url,
 			)
 		);
 	}
@@ -836,8 +836,8 @@ final class Ob_Endpoints {
 			$canonical = home_url( '/badges/find/' );
 		} elseif ( 'claim-name' === $view ) {
 			$title = __( 'Add your name', 'fenton-digital-badges' );
-			if ( isset( $vars['form_action'] ) && is_string( $vars['form_action'] ) && '' !== $vars['form_action'] ) {
-				$canonical = $vars['form_action'];
+			if ( isset( $vars['fendigibadge_form_action'] ) && is_string( $vars['fendigibadge_form_action'] ) && '' !== $vars['fendigibadge_form_action'] ) {
+				$canonical = $vars['fendigibadge_form_action'];
 			}
 		}
 
