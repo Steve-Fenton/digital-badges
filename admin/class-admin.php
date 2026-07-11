@@ -167,10 +167,10 @@ final class Admin {
 
 		wp_dropdown_pages(
 			array(
-				'name'              => Public_Facing::FIND_PAGE_OPTION,
-				'id'                => Public_Facing::FIND_PAGE_OPTION,
-				'selected'          => $selected,
-				'show_option_none'  => __( '— Plugin default —', 'fenton-digital-badges' ),
+				'name'              => esc_attr( Public_Facing::FIND_PAGE_OPTION ),
+				'id'                => esc_attr( Public_Facing::FIND_PAGE_OPTION ),
+				'selected'          => esc_attr( (string) $selected ),
+				'show_option_none'  => esc_html__( '— Plugin default —', 'fenton-digital-badges' ),
 				'option_none_value' => '0',
 			)
 		);
