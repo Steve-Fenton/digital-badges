@@ -271,7 +271,7 @@ final class Admin {
 			$rows = 'description' === $key ? 3 : 4;
 			printf(
 				'<textarea class="large-text" rows="%d" name="%s" id="%s">%s</textarea>',
-				$rows,
+				absint( $rows ),
 				esc_attr( $name ),
 				esc_attr( $name ),
 				esc_textarea( (string) $value )

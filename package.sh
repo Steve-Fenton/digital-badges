@@ -142,24 +142,9 @@ trap cleanup EXIT
 STAGE_PLUGIN="${STAGE}/${PLUGIN_SLUG}"
 mkdir -p "${STAGE_PLUGIN}"
 
+# Keep packaging in sync with the WordPress.org deploy excludes.
 rsync -a \
-  --exclude '.git/' \
-  --exclude '.gitignore' \
-  --exclude '.DS_Store' \
-  --exclude '.idea/' \
-  --exclude '.vscode/' \
-  --exclude '.cursor/' \
-  --exclude 'node_modules/' \
-  --exclude 'vendor/' \
-  --exclude 'dist/' \
-  --exclude 'coverage/' \
-  --exclude '.env' \
-  --exclude '.env.*' \
-  --exclude '*.log' \
-  --exclude '.phpunit.result.cache' \
-  --exclude 'package.sh' \
-  --exclude '*.zip' \
-  --exclude '.gitkeep' \
+  --exclude-from="${ROOT}/.distignore" \
   "${ROOT}/" "${STAGE_PLUGIN}/"
 
 (

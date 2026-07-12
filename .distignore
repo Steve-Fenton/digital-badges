@@ -1,25 +1,28 @@
-# WordPress.org plugin directory assets (deployed separately to SVN /assets).
-/.wordpress-org
+# Files and directories listed here are excluded from the WordPress.org plugin ZIP / SVN trunk.
+# (Directory assets under .wordpress-org are deployed separately to SVN /assets.)
+
+# WordPress.org plugin directory assets
+.wordpress-org
 
 # Git / GitHub
-/.git
-/.github
+.git
+.github
 .gitignore
 .distignore
 
 # Dev / packaging
-/package.sh
-/README.md
-/dist
+package.sh
+README.md
+dist
 
 # Dependencies
-/node_modules
-/vendor
+node_modules
+vendor
 
 # Editor / OS
-/.cursor
-/.idea
-/.vscode
+.cursor
+.idea
+.vscode
 .DS_Store
 
 # Env / secrets / cache
@@ -27,6 +30,6 @@
 .env.*
 *.log
 .phpunit.result.cache
-/coverage
+coverage
 *.zip
 .gitkeep
