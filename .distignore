@@ -1,0 +1,32 @@
+# WordPress.org plugin directory assets (deployed separately to SVN /assets).
+/.wordpress-org
+
+# Git / GitHub
+/.git
+/.github
+.gitignore
+.distignore
+
+# Dev / packaging
+/package.sh
+/README.md
+/dist
+
+# Dependencies
+/node_modules
+/vendor
+
+# Editor / OS
+/.cursor
+/.idea
+/.vscode
+.DS_Store
+
+# Env / secrets / cache
+.env
+.env.*
+*.log
+.phpunit.result.cache
+/coverage
+*.zip
+.gitkeep

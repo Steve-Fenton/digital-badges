@@ -83,6 +83,12 @@ Each find-badges email ends with a “Stop all future notifications” link. Usi
 
 This release implements Open Badges 1.0 JSON endpoints and assertions.
 
+== Screenshots ==
+
+1. Badges settings — configure your issuing organization.
+2. Issue badges — award credentials from a CSV upload.
+3. Attestation page — public certificate view for earners.
+
 == Changelog ==
 
 = 0.1.29 =
