@@ -1,6 +1,6 @@
 <?php
 /**
- * Unsubscribe list and signed links for find-badges emails.
+ * Unsubscribe list and signed links for badge notification emails.
  *
  * @package FentonDigitalBadges
  */

@@ -719,7 +719,7 @@ public static function process_lookup_request( string &$error ): void {
 	$results = Assertion_Repository::find_by_lookup( $lookup );
 
 	if ( array() !== $results ) {
-		self::send_lookup_email( $email, $results );
+		Badge_Mailer::send_find( $email, $results );
 	}
 
 	$cached_error = $error;
@@ -727,128 +727,6 @@ public static function process_lookup_request( string &$error ): void {
 	// Discard plaintext email after use.
 	unset( $email, $lookup );
 }
-
-	/**
-	 * Email attestation URLs for badges found via the public lookup form.
-	 *
-	 * @param string       $email   Recipient email.
-	 * @param list<object> $results Assertion rows.
-	 */
-	private static function send_lookup_email( string $email, array $results ): void {
-		$site_name = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
-
-		$entries = array();
-		$seen    = array();
-
-		foreach ( $results as $row ) {
-			$uid = (string) $row->uid;
-			if ( isset( $seen[ $uid ] ) ) {
-				continue;
-			}
-			$seen[ $uid ] = true;
-
-			$url   = Assertion_Repository::attestation_url( $uid );
-			$badge = get_post( (int) $row->badge_post_id );
-			$name  = ( $badge instanceof \WP_Post ) ? get_the_title( $badge ) : '';
-
-			if ( '' === $url ) {
-				continue;
-			}
-
-			$claim_url = '';
-			if ( '' === trim( (string) ( $row->recipient_name ?? '' ) ) ) {
-				$claim_token = Name_Claim::issue_for_assertion( $row );
-				if ( is_string( $claim_token ) && '' !== $claim_token ) {
-					$claim_url = Name_Claim::claim_url( $claim_token );
-				}
-			}
-
-			$entries[] = array(
-				'name'      => '' !== $name ? $name : $uid,
-				'url'       => $url,
-				'claim_url' => $claim_url,
-			);
-		}
-
-		if ( array() === $entries ) {
-			return;
-		}
-
-		$subject = sprintf(
-			/* translators: %s: site name */
-			__( 'Your badges on %s', 'fenton-digital-badges' ),
-			$site_name
-		);
-
-		$blocks = array();
-		foreach ( $entries as $entry ) {
-			$block = $entry['name'] . "\n" . $entry['url'];
-
-			if ( '' !== $entry['claim_url'] ) {
-				$block .= "\n\n" . __( 'Claim your certificate and add your name with the following one-time link:', 'fenton-digital-badges' );
-				$block .= "\n" . $entry['claim_url'];
-			}
-
-			$blocks[] = $block;
-		}
-
-		$issuer = Issuer::get();
-
-		$intro = trim( $issuer['find_email'] );
-		if ( '' === $intro ) {
-			$intro = sprintf(
-				/* translators: %s: site name */
-				__( 'You searched for your badges on %s. We found the following badges.', 'fenton-digital-badges' ),
-				$site_name
-			);
-		}
-
-		$signoff = trim( $issuer['find_email_signoff'] );
-		if ( '' === $signoff ) {
-			$signoff = __( 'Enjoy your badges!', 'fenton-digital-badges' );
-		}
-
-		$body  = $intro;
-		$body .= "\n\n" . implode( "\n\n", $blocks );
-		$body .= "\n\n" . $signoff;
-
-		$unsubscribe_url = Email_Unsubscribe::unsubscribe_url( $email );
-		if ( '' !== $unsubscribe_url ) {
-			$body .= "\n\n" . __( 'You can stop all future badge notifications by clicking the link below:', 'fenton-digital-badges' );
-			$body .= "\n" . $unsubscribe_url;
-		}
-
-		$body .= "\n";
-
-		$from_email    = $issuer['sending_email'];
-		$from_name     = $issuer['sending_display_name'];
-		$from_email_cb = null;
-		$from_name_cb  = null;
-
-		if ( '' !== $from_email && is_email( $from_email ) ) {
-			$from_email_cb = static function () use ( $from_email ): string {
-				return $from_email;
-			};
-			add_filter( 'wp_mail_from', $from_email_cb );
-		}
-
-		if ( '' !== $from_name ) {
-			$from_name_cb = static function () use ( $from_name ): string {
-				return $from_name;
-			};
-			add_filter( 'wp_mail_from_name', $from_name_cb );
-		}
-
-		wp_mail( $email, $subject, $body );
-
-		if ( null !== $from_email_cb ) {
-			remove_filter( 'wp_mail_from', $from_email_cb );
-		}
-
-		if ( null !== $from_name_cb ) {
-			remove_filter( 'wp_mail_from_name', $from_name_cb );
-		}
-	}
 
 	/**
 	 * Render a view template and exit.

@@ -112,8 +112,8 @@ final class Csv_Issuer {
 				)
 			);
 
-			// Email discarded; only hashes remain in $assertion / DB.
-			unset( $email, $identity, $salt );
+			// Discard identity material; keep $email until after notification.
+			unset( $identity, $salt );
 
 			if ( null === $assertion ) {
 				$errors[] = sprintf(
@@ -121,11 +121,14 @@ final class Csv_Issuer {
 					__( 'Line %d: failed to create assertion.', 'fenton-digital-badges' ),
 					$line
 				);
+				unset( $email, $lookup );
 				continue;
 			}
 
+			Badge_Mailer::send_issue( $email, $assertion );
+
 			$seen[ $lookup ] = true;
-			unset( $lookup );
+			unset( $email, $lookup );
 			++$issued;
 		}
 

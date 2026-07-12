@@ -23,7 +23,7 @@ final class Issuer {
 	/**
 	 * Default issuer option values.
 	 *
-	 * @return array{name: string, url: string, email: string, description: string, image_id: int, linkedin_organization_id: string, sending_email: string, sending_display_name: string, find_email: string, find_email_signoff: string}
+	 * @return array{name: string, url: string, email: string, description: string, image_id: int, linkedin_organization_id: string, sending_email: string, sending_display_name: string, find_email: string, find_email_signoff: string, issue_email: string, issue_email_signoff: string}
 	 */
 	public static function defaults(): array {
 		return array(
@@ -37,13 +37,15 @@ final class Issuer {
 			'sending_display_name'     => '',
 			'find_email'               => '',
 			'find_email_signoff'       => '',
+			'issue_email'              => '',
+			'issue_email_signoff'      => '',
 		);
 	}
 
 	/**
 	 * Get issuer settings.
 	 *
-	 * @return array{name: string, url: string, email: string, description: string, image_id: int, linkedin_organization_id: string, sending_email: string, sending_display_name: string, find_email: string, find_email_signoff: string}
+	 * @return array{name: string, url: string, email: string, description: string, image_id: int, linkedin_organization_id: string, sending_email: string, sending_display_name: string, find_email: string, find_email_signoff: string, issue_email: string, issue_email_signoff: string}
 	 */
 	public static function get(): array {
 		$stored = get_option( self::OPTION_KEY, array() );
@@ -63,6 +65,8 @@ final class Issuer {
 		$merged['sending_display_name']     = (string) ( $merged['sending_display_name'] ?? '' );
 		$merged['find_email']               = (string) ( $merged['find_email'] ?? '' );
 		$merged['find_email_signoff']       = (string) ( $merged['find_email_signoff'] ?? '' );
+		$merged['issue_email']              = (string) ( $merged['issue_email'] ?? '' );
+		$merged['issue_email_signoff']      = (string) ( $merged['issue_email_signoff'] ?? '' );
 
 		return $merged;
 	}
@@ -130,7 +134,7 @@ final class Issuer {
 	 * Sanitize and persist issuer settings from a settings form.
 	 *
 	 * @param mixed $input Raw option input.
-	 * @return array{name: string, url: string, email: string, description: string, image_id: int, linkedin_organization_id: string, sending_email: string, sending_display_name: string, find_email: string, find_email_signoff: string}
+	 * @return array{name: string, url: string, email: string, description: string, image_id: int, linkedin_organization_id: string, sending_email: string, sending_display_name: string, find_email: string, find_email_signoff: string, issue_email: string, issue_email_signoff: string}
 	 */
 	public static function sanitize( $input ): array {
 		$defaults = self::defaults();
@@ -149,6 +153,8 @@ final class Issuer {
 		$sending_name  = isset( $input['sending_display_name'] ) ? sanitize_text_field( (string) $input['sending_display_name'] ) : '';
 		$find_email    = isset( $input['find_email'] ) ? sanitize_textarea_field( (string) $input['find_email'] ) : '';
 		$find_signoff  = isset( $input['find_email_signoff'] ) ? sanitize_textarea_field( (string) $input['find_email_signoff'] ) : '';
+		$issue_email   = isset( $input['issue_email'] ) ? sanitize_textarea_field( (string) $input['issue_email'] ) : '';
+		$issue_signoff = isset( $input['issue_email_signoff'] ) ? sanitize_textarea_field( (string) $input['issue_email_signoff'] ) : '';
 
 		if ( '' === $url ) {
 			$url = $defaults['url'];
@@ -165,6 +171,8 @@ final class Issuer {
 			'sending_display_name'     => $sending_name,
 			'find_email'               => $find_email,
 			'find_email_signoff'       => $find_signoff,
+			'issue_email'              => $issue_email,
+			'issue_email_signoff'      => $issue_signoff,
 		);
 	}
 }
