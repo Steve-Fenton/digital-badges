@@ -293,6 +293,63 @@ final class Assertion_Repository {
 	}
 
 	/**
+	 * Assertion totals and per-badge breakdown for the admin Stats page.
+	 *
+	 * "Claimed" means the assertion has a non-empty recipient name.
+	 *
+	 * @return array{
+	 *   total_issued: int,
+	 *   total_claimed: int,
+	 *   by_badge: list<array{
+	 *     badge_post_id: int,
+	 *     issued: int,
+	 *     claimed: int
+	 *   }>
+	 * }
+	 */
+	public static function get_stats(): array {
+		global $wpdb;
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT badge_post_id, COUNT(*) AS issued, SUM(CASE WHEN TRIM(recipient_name) <> %s THEN 1 ELSE 0 END) AS claimed FROM %i GROUP BY badge_post_id ORDER BY issued DESC, badge_post_id ASC',
+				'',
+				self::table_name()
+			)
+		);
+
+		$by_badge      = array();
+		$total_issued  = 0;
+		$total_claimed = 0;
+
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $row ) {
+				if ( ! $row instanceof \stdClass ) {
+					continue;
+				}
+
+				$issued  = isset( $row->issued ) ? absint( $row->issued ) : 0;
+				$claimed = isset( $row->claimed ) ? absint( $row->claimed ) : 0;
+
+				$by_badge[] = array(
+					'badge_post_id' => isset( $row->badge_post_id ) ? absint( $row->badge_post_id ) : 0,
+					'issued'        => $issued,
+					'claimed'       => $claimed,
+				);
+
+				$total_issued  += $issued;
+				$total_claimed += $claimed;
+			}
+		}
+
+		return array(
+			'total_issued'  => $total_issued,
+			'total_claimed' => $total_claimed,
+			'by_badge'      => $by_badge,
+		);
+	}
+
+	/**
 	 * Paginated assertion list for admin.
 	 *
 	 * @param string $recipient_lookup Optional recipient lookup HMAC to filter by (admin email search).

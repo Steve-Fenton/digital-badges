@@ -24,6 +24,8 @@ Fenton Digital Badges lets you issue [Open Badges 1.0](https://github.com/mozill
 * Public attestation pages with share, download, and LinkedIn Add to Profile
 * Issue emails include a one-time link so earners can add their name, and a secure link to stop future notifications
 * Assertions list with revoke, restore, and delete (revoked only)
+* Assertion filters on **Badges → Assertions** — filter by badge type, search by recipient email (hashed lookup; no email is stored), and choose items per page
+* **Badges → Stats** — issued, claimed, and claimed % totals, plus a per–badge-type breakdown table
 * Recipient emails are salted/hashed — plaintext emails are not stored on assertions (unsubscribe opt-outs are an exception)
 
 You can add templates for the badge pages using `/wp-admin/site-editor.php?p=%2Ftemplate` on your site.
@@ -85,9 +87,12 @@ This release implements Open Badges 1.0 JSON endpoints and assertions.
 
 == Changelog ==
 
+= 0.1.37 =
+* Added assertion filters to **Badges → Assertions** — filter by badge type, search by recipient email (hashed lookup; no email is sent or stored), and choose items per page.
+* Added **Badges → Stats** with issued, claimed, and claimed % summary boxes and a per–badge-type breakdown table.
+
 = 0.1.36 =
 * Removed the public "find my badges" email lookup form and its `/badges/find/` endpoint, `[fendigibadge_find]` shortcode, and Find badges page setting. This was the only public, unauthenticated endpoint that could trigger an email; badge notification emails are now only sent when a WordPress user issues a badge. The one-time name-claim link and unsubscribe link are unaffected.
-* Added an admin-only email search to **Badges → Assertions** so signed-in administrators can find a recipient's badges by comparing the email's hash against stored assertions. No email is sent and the address is not stored.
 * Added an Earn URL field to badges (the page where someone can go to earn the badge). It's shown as a link wherever `[fendigibadge]` renders the badge, and as a button on the public attestation page.
 
 = 0.1.29 =

@@ -28,7 +28,7 @@ final class Admin {
 	 * Wire admin hooks.
 	 */
 	public static function init(): void {
-		add_action( 'admin_menu', array( self::class, 'register_menu' ) );
+		add_action( 'admin_menu', array( self::class, 'register_menu' ), 11 );
 		add_action( 'admin_init', array( self::class, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_action( 'add_meta_boxes', array( self::class, 'register_meta_boxes' ) );
@@ -43,6 +43,11 @@ final class Admin {
 	 * Register admin menu pages.
 	 */
 	public static function register_menu(): void {
+		remove_submenu_page(
+			'edit.php?post_type=' . Post_Types::BADGE,
+			'post-new.php?post_type=' . Post_Types::BADGE
+		);
+
 		add_submenu_page(
 			'edit.php?post_type=fendigibadge_badge',
 			__( 'Issue Badges', 'fenton-digital-badges' ),
@@ -59,6 +64,15 @@ final class Admin {
 			'manage_options',
 			'fendigibadge-assertions',
 			array( self::class, 'render_assertions_page' )
+		);
+
+		add_submenu_page(
+			'edit.php?post_type=fendigibadge_badge',
+			__( 'Stats', 'fenton-digital-badges' ),
+			__( 'Stats', 'fenton-digital-badges' ),
+			'manage_options',
+			'fendigibadge-stats',
+			array( self::class, 'render_stats_page' )
 		);
 
 		add_submenu_page(
@@ -602,6 +616,83 @@ final class Admin {
 
 		wp_safe_redirect( $redirect );
 		exit;
+	}
+
+	/**
+	 * Render Stats admin page.
+	 */
+	public static function render_stats_page(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$stats = Assertion_Repository::get_stats();
+		?>
+		<div class="wrap">
+			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+
+			<div class="fendigibadge-stats-summary">
+				<div class="fendigibadge-stats-summary__box">
+					<span class="fendigibadge-stats-summary__label"><?php esc_html_e( 'Issued', 'fenton-digital-badges' ); ?></span>
+					<span class="fendigibadge-stats-summary__value"><?php echo esc_html( number_format_i18n( $stats['total_issued'] ) ); ?></span>
+				</div>
+				<div class="fendigibadge-stats-summary__box">
+					<span class="fendigibadge-stats-summary__label"><?php esc_html_e( 'Claimed', 'fenton-digital-badges' ); ?></span>
+					<span class="fendigibadge-stats-summary__value"><?php echo esc_html( number_format_i18n( $stats['total_claimed'] ) ); ?></span>
+				</div>
+				<div class="fendigibadge-stats-summary__box">
+					<span class="fendigibadge-stats-summary__label"><?php esc_html_e( 'Claimed %', 'fenton-digital-badges' ); ?></span>
+					<span class="fendigibadge-stats-summary__value"><?php echo esc_html( self::format_claimed_percent( $stats['total_claimed'], $stats['total_issued'] ) ); ?></span>
+				</div>
+			</div>
+
+			<table class="wp-list-table widefat fixed striped">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Badge type', 'fenton-digital-badges' ); ?></th>
+						<th class="column-num"><?php esc_html_e( 'Issued', 'fenton-digital-badges' ); ?></th>
+						<th class="column-num"><?php esc_html_e( 'Claimed', 'fenton-digital-badges' ); ?></th>
+						<th class="column-num"><?php esc_html_e( 'Claimed %', 'fenton-digital-badges' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if ( array() === $stats['by_badge'] ) : ?>
+						<tr>
+							<td colspan="4"><?php esc_html_e( 'No assertions yet.', 'fenton-digital-badges' ); ?></td>
+						</tr>
+					<?php else : ?>
+						<?php foreach ( $stats['by_badge'] as $row ) : ?>
+							<?php
+							$badge_id    = (int) $row['badge_post_id'];
+							$badge_title = get_the_title( $badge_id );
+							$issued      = (int) $row['issued'];
+							$claimed     = (int) $row['claimed'];
+							?>
+							<tr>
+								<td><?php echo esc_html( $badge_title ? $badge_title : '#' . (string) $badge_id ); ?></td>
+								<td class="column-num"><?php echo esc_html( number_format_i18n( $issued ) ); ?></td>
+								<td class="column-num"><?php echo esc_html( number_format_i18n( $claimed ) ); ?></td>
+								<td class="column-num"><?php echo esc_html( self::format_claimed_percent( $claimed, $issued ) ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					<?php endif; ?>
+				</tbody>
+			</table>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Format a claimed percentage for display.
+	 */
+	private static function format_claimed_percent( int $claimed, int $issued ): string {
+		if ( $issued <= 0 ) {
+			return '—';
+		}
+
+		$percent = ( $claimed / $issued ) * 100;
+
+		return number_format_i18n( $percent, 1 ) . '%';
 	}
 
 	/**
