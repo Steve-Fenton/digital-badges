@@ -389,14 +389,21 @@ final class Admin {
 		wp_nonce_field( 'fendigibadge_badge_meta', 'fendigibadge_badge_meta_nonce' );
 
 		$criteria = get_post_meta( $post->ID, Badge_Class::META_CRITERIA_URL, true );
+		$earn_url = get_post_meta( $post->ID, Badge_Class::META_EARN_URL, true );
 		$tags     = get_post_meta( $post->ID, Badge_Class::META_TAGS, true );
 		$criteria = is_string( $criteria ) ? $criteria : '';
+		$earn_url = is_string( $earn_url ) ? $earn_url : '';
 		$tags     = is_string( $tags ) ? $tags : '';
 		?>
 		<p>
 			<label for="fendigibadge_criteria_url"><strong><?php esc_html_e( 'Criteria URL', 'fenton-digital-badges' ); ?></strong></label><br />
 			<input type="url" class="widefat" name="fendigibadge_criteria_url" id="fendigibadge_criteria_url" value="<?php echo esc_attr( $criteria ); ?>" />
 			<span class="description"><?php esc_html_e( 'Leave blank to use this badge’s permalink.', 'fenton-digital-badges' ); ?></span>
+		</p>
+		<p>
+			<label for="fendigibadge_earn_url"><strong><?php esc_html_e( 'Earn URL', 'fenton-digital-badges' ); ?></strong></label><br />
+			<input type="url" class="widefat" name="fendigibadge_earn_url" id="fendigibadge_earn_url" value="<?php echo esc_attr( $earn_url ); ?>" />
+			<span class="description"><?php esc_html_e( 'Where can someone go to earn this badge? Shown as a link wherever the badge is displayed.', 'fenton-digital-badges' ); ?></span>
 		</p>
 		<p>
 			<label for="fendigibadge_tags"><strong><?php esc_html_e( 'Tags', 'fenton-digital-badges' ); ?></strong></label><br />

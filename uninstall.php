@@ -25,4 +25,5 @@ $fendigibadge_table = $wpdb->prefix . 'fendigibadge_assertions';
 $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $fendigibadge_table ) );
 
 delete_post_meta_by_key( '_fendigibadge_criteria_url' );
+delete_post_meta_by_key( '_fendigibadge_earn_url' );
 delete_post_meta_by_key( '_fendigibadge_tags' );

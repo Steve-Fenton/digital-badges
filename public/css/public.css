@@ -20,6 +20,20 @@
 	font-size: 1rem;
 }
 
+.fendigibadge-badge__earn-link {
+	display: inline-block;
+	margin-top: 0.5rem;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--fendigibadge-accent, #0a66c2);
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+}
+
+.fendigibadge-badge__earn-link:hover {
+	color: var(--fendigibadge-accent-hover, #084e96);
+}
+
 .fendigibadge-attestation__btn {
 	display: inline-flex;
 	align-items: center;

@@ -175,14 +175,20 @@ final class Public_Facing {
 			return '';
 		}
 
-		$image = Badge_Class::image_url( $badge_id );
-		$html  = '<div class="fendigibadge-badge" data-badge-id="' . esc_attr( (string) $badge_id ) . '">';
+		$image    = Badge_Class::image_url( $badge_id );
+		$earn_url = Badge_Class::earn_url( $badge_id );
+		$html     = '<div class="fendigibadge-badge" data-badge-id="' . esc_attr( (string) $badge_id ) . '">';
 
 		if ( '' !== $image ) {
 			$html .= '<img class="fendigibadge-badge__image" src="' . esc_url( $image ) . '" alt="' . esc_attr( get_the_title( $badge ) ) . '" />';
 		}
 
 		$html .= '<h3 class="fendigibadge-badge__title">' . esc_html( get_the_title( $badge ) ) . '</h3>';
+
+		if ( '' !== $earn_url ) {
+			$html .= '<a class="fendigibadge-badge__earn-link" href="' . esc_url( $earn_url ) . '" rel="noopener noreferrer">' . esc_html__( 'Earn this badge', 'fenton-digital-badges' ) . '</a>';
+		}
+
 		$html .= '</div>';
 
 		return $html;

@@ -3,7 +3,7 @@
  * Public attestation page for a single assertion.
  *
  * Expected vars: $assertion, $badge, $issuer, $linkedin_url, $attestation_url,
- * $json_url, $image_url, $assertion_json, $share_text
+ * $json_url, $image_url, $earn_url, $assertion_json, $share_text
  *
  * @package FentonDigitalBadges
  */
@@ -111,16 +111,9 @@ if ( ! empty( $assertion->expires ) ) {
 					<a class="fendigibadge-attestation__btn fendigibadge-attestation__btn--primary" href="<?php echo esc_url( $linkedin_url ); ?>" target="_blank" rel="noopener noreferrer">
 						<?php esc_html_e( 'Add to LinkedIn', 'fenton-digital-badges' ); ?>
 					</a>
-					<?php if ( '' !== $image_url ) : ?>
-						<a class="fendigibadge-attestation__btn" href="<?php echo esc_url( $image_url ); ?>" download>
-							<?php esc_html_e( 'Download badge', 'fenton-digital-badges' ); ?>
-						</a>
-					<?php endif; ?>
-				</div>
-				<div class="fendigibadge-attestation__actions-secondary">
 					<button
 						type="button"
-						class="fendigibadge-attestation__btn fendigibadge-attestation__btn--ghost"
+						class="fendigibadge-attestation__btn"
 						data-fendigibadge-share
 						data-fendigibadge-share-title="<?php echo esc_attr( $fendigibadge_badge_name ); ?>"
 						data-fendigibadge-share-text="<?php echo esc_attr( $share_text ); ?>"
@@ -132,6 +125,18 @@ if ( ! empty( $assertion->expires ) ) {
 					>
 						<?php esc_html_e( 'Share', 'fenton-digital-badges' ); ?>
 					</button>
+					<?php if ( '' !== $earn_url ) : ?>
+						<a class="fendigibadge-attestation__btn" href="<?php echo esc_url( $earn_url ); ?>" rel="noopener noreferrer">
+							<?php esc_html_e( 'Earn this badge', 'fenton-digital-badges' ); ?>
+						</a>
+					<?php endif; ?>
+				</div>
+				<div class="fendigibadge-attestation__actions-secondary">
+					<?php if ( '' !== $image_url ) : ?>
+						<a class="fendigibadge-attestation__btn fendigibadge-attestation__btn--ghost" href="<?php echo esc_url( $image_url ); ?>" download>
+							<?php esc_html_e( 'Download badge', 'fenton-digital-badges' ); ?>
+						</a>
+					<?php endif; ?>
 					<button
 						type="button"
 						class="fendigibadge-attestation__btn fendigibadge-attestation__btn--ghost"

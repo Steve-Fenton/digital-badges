@@ -211,6 +211,7 @@ final class Ob_Endpoints {
 		$attestation_url = Assertion_Repository::attestation_url( $uid );
 		$json_url        = Assertion_Repository::json_url( $uid );
 		$image_url       = Badge_Class::image_url( (int) $badge->ID );
+		$earn_url        = Badge_Class::earn_url( (int) $badge->ID );
 
 		$assertion_data = Assertion_Repository::to_open_badges( $row );
 		$assertion_json = is_array( $assertion_data )
@@ -225,6 +226,7 @@ final class Ob_Endpoints {
 			'attestation_url' => $attestation_url,
 			'json_url'        => $json_url,
 			'image_url'       => $image_url,
+			'earn_url'        => $earn_url,
 			'assertion_json'  => $assertion_json,
 			'share_text'      => sprintf(
 				/* translators: 1: badge name, 2: issuer name */

@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Badge_Class {
 
 	public const META_CRITERIA_URL = '_fendigibadge_criteria_url';
+	public const META_EARN_URL     = '_fendigibadge_earn_url';
 	public const META_TAGS         = '_fendigibadge_tags';
 
 	/**
@@ -41,6 +42,15 @@ final class Badge_Class {
 		$permalink = get_permalink( $badge_post_id );
 
 		return is_string( $permalink ) ? $permalink : '';
+	}
+
+	/**
+	 * URL of the page where someone can go to earn a badge.
+	 */
+	public static function earn_url( int $badge_post_id ): string {
+		$stored = get_post_meta( $badge_post_id, self::META_EARN_URL, true );
+
+		return is_string( $stored ) ? $stored : '';
 	}
 
 	/**
@@ -154,9 +164,11 @@ final class Badge_Class {
 		}
 
 		$criteria = isset( $_POST['fendigibadge_criteria_url'] ) ? esc_url_raw( wp_unslash( (string) $_POST['fendigibadge_criteria_url'] ) ) : '';
+		$earn_url = isset( $_POST['fendigibadge_earn_url'] ) ? esc_url_raw( wp_unslash( (string) $_POST['fendigibadge_earn_url'] ) ) : '';
 		$tags     = isset( $_POST['fendigibadge_tags'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_tags'] ) ) : '';
 
 		update_post_meta( $post_id, self::META_CRITERIA_URL, $criteria );
+		update_post_meta( $post_id, self::META_EARN_URL, $earn_url );
 		update_post_meta( $post_id, self::META_TAGS, $tags );
 	}
 }
