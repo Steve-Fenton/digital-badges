@@ -109,6 +109,19 @@ final class Public_Facing {
 			FENDIGIBADGE_VERSION,
 			true
 		);
+
+		wp_localize_script(
+			'fendigibadge-public',
+			'fendigibadgePublic',
+			array(
+				'shareDestinations' => array(
+					'linkedin'  => __( 'LinkedIn', 'fenton-digital-badges' ),
+					'mastodon'  => __( 'Mastodon', 'fenton-digital-badges' ),
+					'bluesky'   => __( 'Bluesky', 'fenton-digital-badges' ),
+					'x'         => __( 'X', 'fenton-digital-badges' ),
+				),
+			)
+		);
 	}
 
 	/**

@@ -1,8 +1,15 @@
 (function () {
 	'use strict';
 
+	var i18n = window.fendigibadgePublic || {};
+	var shareLabels = i18n.shareDestinations || {};
+
 	function canWebShare() {
 		return typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+	}
+
+	function isDesktopShare() {
+		return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 	}
 
 	function buildShareText(title, description, url) {
@@ -17,6 +24,18 @@
 			parts.push(url);
 		}
 		return parts.join('\n\n');
+	}
+
+	function buildShareDestinationUrls(text, url) {
+		var encodedText = encodeURIComponent(text);
+		var encodedUrl = encodeURIComponent(url);
+
+		return {
+			linkedin: 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodedUrl,
+			mastodon: 'https://mastodon.social/share?text=' + encodedText,
+			bluesky: 'https://bsky.app/intent/compose?text=' + encodedText,
+			x: 'https://twitter.com/intent/tweet?text=' + encodedText
+		};
 	}
 
 	function extensionForMime(mime) {
@@ -52,9 +71,122 @@
 		});
 	}
 
+	function closeShareMenus() {
+		document.querySelectorAll('.fendigibadge-share-menu').forEach(function (menu) {
+			menu.setAttribute('hidden', '');
+		});
+
+		document.querySelectorAll('[data-fendigibadge-share][aria-expanded="true"]').forEach(function (button) {
+			button.setAttribute('aria-expanded', 'false');
+		});
+	}
+
+	function getShareMenu(button) {
+		var wrapper = button.closest('.fendigibadge-share');
+		if (!(wrapper instanceof HTMLElement)) {
+			return null;
+		}
+
+		var menu = wrapper.querySelector('.fendigibadge-share-menu');
+		if (menu instanceof HTMLElement) {
+			return menu;
+		}
+
+		menu = document.createElement('div');
+		menu.className = 'fendigibadge-share-menu';
+		menu.setAttribute('role', 'menu');
+		menu.setAttribute('hidden', '');
+
+		[
+			{ key: 'linkedin', label: shareLabels.linkedin || 'LinkedIn' },
+			{ key: 'mastodon', label: shareLabels.mastodon || 'Mastodon' },
+			{ key: 'bluesky', label: shareLabels.bluesky || 'Bluesky' },
+			{ key: 'x', label: shareLabels.x || 'X' }
+		].forEach(function (destination) {
+			var link = document.createElement('a');
+			link.className = 'fendigibadge-share-menu__item';
+			link.setAttribute('role', 'menuitem');
+			link.setAttribute('data-fendigibadge-share-destination', destination.key);
+			link.target = '_blank';
+			link.rel = 'noopener noreferrer';
+			link.textContent = destination.label;
+			menu.appendChild(link);
+		});
+
+		wrapper.appendChild(menu);
+		return menu;
+	}
+
+	function toggleShareMenu(button, urls) {
+		var menu = getShareMenu(button);
+		if (!menu) {
+			return;
+		}
+
+		var isOpen = !menu.hasAttribute('hidden');
+		closeShareMenus();
+
+		if (isOpen) {
+			return;
+		}
+
+		menu.querySelectorAll('[data-fendigibadge-share-destination]').forEach(function (link) {
+			var key = link.getAttribute('data-fendigibadge-share-destination');
+			if (key && urls[key]) {
+				link.href = urls[key];
+			}
+		});
+
+		menu.removeAttribute('hidden');
+		button.setAttribute('aria-expanded', 'true');
+	}
+
+	function shareWithWebApi(shareButton) {
+		var title = shareButton.getAttribute('data-fendigibadge-share-title') || document.title;
+		var description = shareButton.getAttribute('data-fendigibadge-share-text') || '';
+		var url = shareButton.getAttribute('data-fendigibadge-share-url') || window.location.href;
+		var imageUrl = shareButton.getAttribute('data-fendigibadge-share-image') || '';
+		var text = buildShareText(title, description, url);
+
+		var basePayload = {
+			title: title,
+			text: text,
+			url: url
+		};
+
+		if (!imageUrl || typeof navigator.canShare !== 'function') {
+			sharePayload(basePayload);
+			return;
+		}
+
+		fetchShareImage(imageUrl)
+			.then(function (file) {
+				var withFiles = {
+					title: title,
+					text: text,
+					files: [file]
+				};
+
+				if (navigator.canShare(withFiles)) {
+					return sharePayload(withFiles);
+				}
+
+				return sharePayload(basePayload);
+			})
+			.catch(function () {
+				sharePayload(basePayload);
+			});
+	}
+
 	document.querySelectorAll('[data-fendigibadge-share]').forEach(function (button) {
-		if (canWebShare()) {
+		if (canWebShare() || isDesktopShare()) {
 			button.removeAttribute('hidden');
+		}
+	});
+
+	document.addEventListener('keydown', function (event) {
+		if (event.key === 'Escape') {
+			closeShareMenus();
 		}
 	});
 
@@ -64,47 +196,33 @@
 			return;
 		}
 
+		if (target.closest('[data-fendigibadge-share-destination]')) {
+			closeShareMenus();
+			return;
+		}
+
+		if (!target.closest('.fendigibadge-share')) {
+			closeShareMenus();
+		}
+
 		var shareButton = target.closest('[data-fendigibadge-share]');
 		if (shareButton) {
 			event.preventDefault();
+
+			if (isDesktopShare()) {
+				var title = shareButton.getAttribute('data-fendigibadge-share-title') || document.title;
+				var description = shareButton.getAttribute('data-fendigibadge-share-text') || '';
+				var url = shareButton.getAttribute('data-fendigibadge-share-url') || window.location.href;
+				var text = buildShareText(title, description, url);
+				toggleShareMenu(shareButton, buildShareDestinationUrls(text, url));
+				return;
+			}
+
 			if (!canWebShare()) {
 				return;
 			}
 
-			var title = shareButton.getAttribute('data-fendigibadge-share-title') || document.title;
-			var description = shareButton.getAttribute('data-fendigibadge-share-text') || '';
-			var url = shareButton.getAttribute('data-fendigibadge-share-url') || window.location.href;
-			var imageUrl = shareButton.getAttribute('data-fendigibadge-share-image') || '';
-			var text = buildShareText(title, description, url);
-
-			var basePayload = {
-				title: title,
-				text: text,
-				url: url
-			};
-
-			if (!imageUrl || typeof navigator.canShare !== 'function') {
-				sharePayload(basePayload);
-				return;
-			}
-
-			fetchShareImage(imageUrl)
-				.then(function (file) {
-					var withFiles = {
-						title: title,
-						text: text,
-						files: [file]
-					};
-
-					if (navigator.canShare(withFiles)) {
-						return sharePayload(withFiles);
-					}
-
-					return sharePayload(basePayload);
-				})
-				.catch(function () {
-					sharePayload(basePayload);
-				});
+			shareWithWebApi(shareButton);
 			return;
 		}
 

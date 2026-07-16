@@ -428,6 +428,46 @@
 	gap: 0.5rem;
 }
 
+.fendigibadge-share {
+	position: relative;
+	display: inline-flex;
+}
+
+.fendigibadge-share-menu {
+	position: absolute;
+	top: calc(100% + 0.35rem);
+	left: 50%;
+	z-index: 20;
+	min-width: 10rem;
+	padding: 0.35rem 0;
+	border: 1px solid var(--fendigibadge-border, #d6d0c8);
+	border-radius: var(--fendigibadge-radius-sm, 6px);
+	background: var(--fendigibadge-surface, #ffffff);
+	box-shadow: var(--fendigibadge-shadow, 0 20px 48px rgba(20, 33, 61, 0.1));
+	transform: translateX(-50%);
+}
+
+.fendigibadge-share-menu[hidden] {
+	display: none;
+}
+
+.fendigibadge-share-menu__item {
+	display: block;
+	padding: 0.55rem 1rem;
+	color: var(--fendigibadge-ink, #1c1917);
+	font-size: 0.9rem;
+	font-weight: 500;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.fendigibadge-share-menu__item:hover,
+.fendigibadge-share-menu__item:focus-visible {
+	background: var(--fendigibadge-surface-muted, #f5f1eb);
+	color: var(--fendigibadge-ink, #1c1917);
+	outline: none;
+}
+
 .fendigibadge-attestation__json-panel {
 	width: 100%;
 	margin-top: 0.35rem;

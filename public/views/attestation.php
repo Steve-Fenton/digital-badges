@@ -111,20 +111,24 @@ if ( ! empty( $assertion->expires ) ) {
 					<a class="fendigibadge-attestation__btn fendigibadge-attestation__btn--primary" href="<?php echo esc_url( $linkedin_url ); ?>" target="_blank" rel="noopener noreferrer">
 						<?php esc_html_e( 'Add to LinkedIn', 'fenton-digital-badges' ); ?>
 					</a>
-					<button
-						type="button"
-						class="fendigibadge-attestation__btn"
-						data-fendigibadge-share
-						data-fendigibadge-share-title="<?php echo esc_attr( $fendigibadge_badge_name ); ?>"
-						data-fendigibadge-share-text="<?php echo esc_attr( $share_text ); ?>"
-						data-fendigibadge-share-url="<?php echo esc_url( $attestation_url ); ?>"
-						<?php if ( '' !== $image_url ) : ?>
-							data-fendigibadge-share-image="<?php echo esc_url( $image_url ); ?>"
-						<?php endif; ?>
-						hidden
-					>
-						<?php esc_html_e( 'Share', 'fenton-digital-badges' ); ?>
-					</button>
+					<div class="fendigibadge-share">
+						<button
+							type="button"
+							class="fendigibadge-attestation__btn"
+							data-fendigibadge-share
+							data-fendigibadge-share-title="<?php echo esc_attr( $fendigibadge_badge_name ); ?>"
+							data-fendigibadge-share-text="<?php echo esc_attr( $share_text ); ?>"
+							data-fendigibadge-share-url="<?php echo esc_url( $attestation_url ); ?>"
+							<?php if ( '' !== $image_url ) : ?>
+								data-fendigibadge-share-image="<?php echo esc_url( $image_url ); ?>"
+							<?php endif; ?>
+							aria-haspopup="menu"
+							aria-expanded="false"
+							hidden
+						>
+							<?php esc_html_e( 'Share', 'fenton-digital-badges' ); ?>
+						</button>
+					</div>
 					<?php if ( '' !== $earn_url ) : ?>
 						<a class="fendigibadge-attestation__btn" href="<?php echo esc_url( $earn_url ); ?>" rel="noopener noreferrer">
 							<?php esc_html_e( 'Earn this badge', 'fenton-digital-badges' ); ?>
