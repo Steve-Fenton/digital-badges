@@ -34,6 +34,10 @@
 	color: var(--fendigibadge-accent-hover, #084e96);
 }
 
+.fendigibadge-badge-page__actions {
+	margin-top: 1.5rem;
+}
+
 .fendigibadge-attestation__btn {
 	display: inline-flex;
 	align-items: center;

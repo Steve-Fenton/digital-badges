@@ -29,6 +29,7 @@ final class Public_Facing {
 	public static function init(): void {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_action( 'wp_head', array( self::class, 'maybe_output_og_tags' ), 5 );
+		add_filter( 'the_content', array( self::class, 'maybe_append_earn_button' ), 15 );
 		add_shortcode( 'fendigibadge', array( self::class, 'render_badge_shortcode' ) );
 		add_shortcode( 'fendigibadge_attestation', array( self::class, 'render_attestation_shortcode' ) );
 	}
@@ -160,6 +161,53 @@ final class Public_Facing {
 		}
 
 		printf( '<meta name="twitter:card" content="summary_large_image" />' . "\n" );
+	}
+
+	/**
+	 * Append an Earn this badge button on single badge pages.
+	 *
+	 * @param string $content Post content.
+	 */
+	public static function maybe_append_earn_button( string $content ): string {
+		if ( ! is_singular( Post_Types::BADGE ) || ! in_the_loop() || ! is_main_query() ) {
+			return $content;
+		}
+
+		$badge_id = get_the_ID();
+
+		if ( ! $badge_id ) {
+			return $content;
+		}
+
+		static $appended = array();
+
+		if ( isset( $appended[ $badge_id ] ) ) {
+			return $content;
+		}
+
+		$earn_url = Badge_Class::earn_url( $badge_id );
+
+		if ( '' === $earn_url ) {
+			return $content;
+		}
+
+		if (
+			has_shortcode( $content, 'fendigibadge' )
+			|| false !== strpos( $content, 'fendigibadge-badge__earn-link' )
+			|| false !== strpos( $content, 'fendigibadge-badge-page__actions' )
+		) {
+			return $content;
+		}
+
+		$appended[ $badge_id ] = true;
+
+		$button = sprintf(
+			'<div class="fendigibadge-badge-page__actions"><a class="fendigibadge-attestation__btn fendigibadge-attestation__btn--primary" href="%1$s" rel="noopener noreferrer">%2$s</a></div>',
+			esc_url( $earn_url ),
+			esc_html__( 'Earn this badge', 'fenton-digital-badges' )
+		);
+
+		return $content . $button;
 	}
 
 	/**
