@@ -128,12 +128,14 @@ final class Badge_Mailer {
 
 		$blocks = array();
 		foreach ( $entries as $entry ) {
-			$block = $entry['name'] . "\n" . $entry['url'];
+			$block = $entry['name'];
 
 			if ( '' !== $entry['claim_url'] ) {
 				$block .= "\n\n" . __( 'Claim your certificate and add your name with the following one-time link:', 'fenton-digital-badges' );
 				$block .= "\n" . $entry['claim_url'];
 			}
+
+			$block .= "\n" . $entry['url'];
 
 			$blocks[] = $block;
 		}
