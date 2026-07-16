@@ -17,15 +17,17 @@ flowchart LR
   IssuerJSON["/ob/issuer.json"]
   BadgeJSON["/ob/badges/{id}.json"]
   AssertJSON["/ob/assertions/{uid}.json"]
-  Lookup[Public email lookup]
+  IssueMail[Issue email]
+  Claim["Name claim (one-time link)"]
   Attest[Attestation HTML page]
   LinkedIn[LinkedIn Add Certification]
 
   Admin --> IssuerJSON
   Admin --> BadgeJSON
   Admin --> AssertJSON
-  Lookup -->|"HMAC lookup hash"| AssertJSON
-  Lookup --> Attest
+  Admin --> IssueMail
+  IssueMail --> Claim
+  IssueMail --> Attest
   Attest --> LinkedIn
 ```
 
@@ -42,16 +44,17 @@ flowchart LR
 | Issuer | `/ob/issuer.json` |
 | BadgeClass | `/ob/badges/{id}.json` |
 | Assertion | `/ob/assertions/{uid}.json` |
-| Find badges | `/badges/find/` or `[fendigibadge_find]` (optional page template via **Badges → Settings**) |
 | Attestation | `/badges/assertion/{uid}/` or `[fendigibadge_attestation]` (optional page template via **Badges → Settings**) |
 
-Theme overrides for plugin views: `fendigibadge/{view}.php` (e.g. `find.php`, `attestation.php`).
+Theme overrides for plugin views: `fendigibadge/{view}.php` (e.g. `attestation.php`, `claim-name.php`).
+
+There is no public endpoint that triggers an email — badge notification emails are only sent when a WordPress user issues a badge (from **Badges → Issue Badges**).
 
 ## Issuing
 
 CSV columns: `email` (required), `name`, `evidence`, `expires` (YYYY-MM-DD). A header row is optional — a single line like `you@example.com,Your Name` works.
 
-Email addresses are salted/hashed for the assertion identity and looked up via a separate HMAC. Plaintext emails are never stored. The public find form always shows the same confirmation message; when matches exist, attestation URLs are emailed to the address.
+Email addresses are salted/hashed for the assertion identity and looked up via a separate HMAC. Plaintext emails are never stored on assertions. When a badge is issued without a name, the issue email includes a one-time link the earner can use to add their name.
 
 ## Structure
 

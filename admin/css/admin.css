@@ -26,23 +26,6 @@
 	max-width: 42rem;
 }
 
-.fendigibadge-email-templates__tabs {
-	margin: 0 0 1rem;
-	padding-top: 0;
-}
-
-.fendigibadge-email-templates__tabs .nav-tab {
-	cursor: pointer;
-	background: transparent;
-	border-bottom: none;
-	margin-left: 0.5em;
-	margin-bottom: 0;
-}
-
-.fendigibadge-email-templates__tabs .nav-tab:first-child {
-	margin-left: 0;
-}
-
-.fendigibadge-email-templates__panel > p:first-child {
+.fendigibadge-email-templates > p:first-child {
 	margin-top: 0;
 }

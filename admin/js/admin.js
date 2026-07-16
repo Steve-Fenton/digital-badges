@@ -55,33 +55,9 @@
 		});
 	}
 
-	function initEmailTabs($root) {
-		var $tabs = $root.find('[data-fendigibadge-email-tab]');
-		var $panels = $root.find('[data-fendigibadge-email-panel]');
-
-		$tabs.on('click', function (event) {
-			event.preventDefault();
-
-			var tab = $(this).attr('data-fendigibadge-email-tab');
-
-			$tabs.removeClass('nav-tab-active').attr('aria-selected', 'false');
-			$(this).addClass('nav-tab-active').attr('aria-selected', 'true');
-
-			$panels.each(function () {
-				var $panel = $(this);
-				var match = $panel.attr('data-fendigibadge-email-panel') === tab;
-				$panel.prop('hidden', !match);
-			});
-		});
-	}
-
 	$(function () {
 		$('[data-fendigibadge-logo-picker]').each(function () {
 			initLogoPicker($(this));
-		});
-
-		$('[data-fendigibadge-email-tabs]').each(function () {
-			initEmailTabs($(this));
 		});
 	});
 })(jQuery);

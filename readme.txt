@@ -4,7 +4,7 @@ Tags: badges, open badges, credentials, certificates, linkedin
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.35
+Stable tag: 0.1.36
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,8 +22,7 @@ Fenton Digital Badges lets you issue [Open Badges 1.0](https://github.com/mozill
 * Email earners when a badge is issued, with a link to their attestation page
 * Public Open Badges JSON endpoints for issuer, badge class, and assertion
 * Public attestation pages with share, download, and LinkedIn Add to Profile
-* Email lookup so earners can request links to badges issued to them (avoids revealing whether an address has badges)
-* Find-badges and issue emails include a secure link to stop future notifications
+* Issue emails include a one-time link so earners can add their name, and a secure link to stop future notifications
 * Assertions list with revoke, restore, and delete (revoked only)
 * Recipient emails are salted/hashed — plaintext emails are not stored on assertions (unsubscribe opt-outs are an exception)
 
@@ -32,12 +31,11 @@ You can add templates for the badge pages using `/wp-admin/site-editor.php?p=%2F
 * Click "Add Template"
 * Select "Single item: Badge" or "Archive: Badge"
 
-To control the layout of `/badges/find/` or `/badges/assertion/{uid}/`, create a Page, optionally add `[fendigibadge_find]` or `[fendigibadge_attestation]`, then choose that page under **Badges → Settings**. Edit the page’s template in the Site Editor. Themes can also override the markup with `fendigibadge/find.php` or `fendigibadge/attestation.php`.
+To control the layout of `/badges/assertion/{uid}/`, create a Page, optionally add `[fendigibadge_attestation]`, then choose that page under **Badges → Settings**. Edit the page’s template in the Site Editor. Themes can also override the markup with `fendigibadge/attestation.php`.
 
 **Shortcodes**
 
 * `[fendigibadge id="123"]` — display a badge
-* `[fendigibadge_find]` — email lookup form (also available at `/badges/find/`)
 * `[fendigibadge_attestation]` — certificate markup on `/badges/assertion/{uid}/` when using a page template
 
 **Public endpoints**
@@ -46,7 +44,6 @@ To control the layout of `/badges/find/` or `/badges/assertion/{uid}/`, create a
 * Badge class JSON: `/ob/badges/{id}.json`
 * Assertion JSON: `/ob/assertions/{uid}.json`
 * Attestation page: `/badges/assertion/{uid}/`
-* Find badges: `/badges/find/`
 * Claim name: `/badges/claim-name/{token}/`
 * Unsubscribe: `/badges/unsubscribe/{token}/`
 
@@ -68,17 +65,13 @@ Columns: `email` (required), `name`, `evidence`, `expires` (YYYY-MM-DD). A heade
 
 No, not on assertions. Emails are salted and hashed for the assertion identity and looked up via a separate HMAC. The only plaintext emails kept are addresses that opted out of badge notifications via the unsubscribe link.
 
-= How does the find badges form work? =
+= How does an earner add their name to a badge? =
 
-Enter the email used when the badge was issued. The form always shows the same confirmation message so it does not reveal whether an address has badges. If matches exist, attestation URLs are emailed to that address. Unsubscribed addresses are ignored before lookup. Submissions are rate-limited per IP (to limit probing many addresses) and per email (to limit repeat requests for the same address).
-
-= What happens if a recipient name is omitted? =
-
-The attestation page still verifies the badge, but shows a generic completion message instead of naming the earner. Issue emails and Find your badges emails include a one-time link to claim the certificate and add their name. The link asks them to confirm the name before saving, then stops working.
+If a badge is issued without a name, the issue email includes a one-time link to add it. The link asks the earner to confirm the name before saving, then stops working. The attestation page still verifies the badge even if no name is ever added, showing a generic completion message instead.
 
 = How do I stop badge notification emails? =
 
-Each find-badges and issue email ends with a “Stop all future notifications” link. Using it adds that address to an unsubscribe list (only when the address still matches at least one badge). Later find requests and issue notifications for that address are ignored.
+Each issue email ends with a “Stop all future notifications” link. Using it adds that address to an unsubscribe list (only when the address still matches at least one badge). Later issue notifications for that address are ignored.
 
 = Does this support Open Badges 2.0 / 3.0? =
 
@@ -91,6 +84,9 @@ This release implements Open Badges 1.0 JSON endpoints and assertions.
 3. Attestation page — public certificate view for earners.
 
 == Changelog ==
+
+= 0.1.36 =
+* Removed the public "find my badges" email lookup form and its `/badges/find/` endpoint, `[fendigibadge_find]` shortcode, and Find badges page setting. This was the only public, unauthenticated endpoint that could trigger an email; badge notification emails are now only sent when a WordPress user issues a badge. The one-time name-claim link and unsubscribe link are unaffected.
 
 = 0.1.29 =
 * Tightened find-badges rate limits: 8 submissions per IP per 10 minutes, and one lookup per email every 30 minutes.

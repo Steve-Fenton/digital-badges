@@ -80,16 +80,6 @@ final class Admin {
 		);
 
 		register_setting(
-			'fendigibadge_find_group',
-			Public_Facing::FIND_PAGE_OPTION,
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( self::class, 'sanitize_page_id' ),
-				'default'           => 0,
-			)
-		);
-
-		register_setting(
 			'fendigibadge_attestation_group',
 			Public_Facing::ATTESTATION_PAGE_OPTION,
 			array(
@@ -107,16 +97,6 @@ final class Admin {
 				echo '<p>' . esc_html__( 'Issuer JSON:', 'fenton-digital-badges' ) . ' <code>' . esc_html( Issuer::json_url() ) . '</code></p>';
 			},
 			'fendigibadge-settings'
-		);
-
-		add_settings_section(
-			'fendigibadge_find_section',
-			__( 'Find badges page', 'fenton-digital-badges' ),
-			static function (): void {
-				echo '<p>' . esc_html__( 'Optionally choose a WordPress page to supply the layout for /badges/find/. Edit that page’s template in the Site Editor to control header, spacing, and chrome. The lookup form is added automatically if the page does not already include the shortcode.', 'fenton-digital-badges' ) . '</p>';
-				echo '<p>' . esc_html__( 'Public lookup URL:', 'fenton-digital-badges' ) . ' <code><a href="' . esc_url( home_url( '/badges/find/' ) ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( home_url( '/badges/find/' ) ) . '</a></code></p>';
-			},
-			'fendigibadge-find'
 		);
 
 		add_settings_section(
@@ -153,7 +133,7 @@ final class Admin {
 			'fendigibadge_email_section',
 			__( 'Email settings', 'fenton-digital-badges' ),
 			static function (): void {
-				echo '<p>' . esc_html__( 'Configure the From address and the body of emails sent when badges are issued or when someone looks up their badges. Leave From fields blank to use the WordPress defaults. Leave body fields blank to use the plugin defaults.', 'fenton-digital-badges' ) . '</p>';
+				echo '<p>' . esc_html__( 'Configure the From address and the body of emails sent when badges are issued. Leave From fields blank to use the WordPress defaults. Leave body fields blank to use the plugin defaults.', 'fenton-digital-badges' ) . '</p>';
 			},
 			'fendigibadge-settings'
 		);
@@ -180,14 +160,6 @@ final class Admin {
 			array( self::class, 'render_email_templates_field' ),
 			'fendigibadge-settings',
 			'fendigibadge_email_section'
-		);
-
-		add_settings_field(
-			'fendigibadge_find_page',
-			__( 'Page template', 'fenton-digital-badges' ),
-			array( self::class, 'render_find_page_field' ),
-			'fendigibadge-find',
-			'fendigibadge_find_section'
 		);
 
 		add_settings_field(
@@ -218,16 +190,6 @@ final class Admin {
 		}
 
 		return $page_id;
-	}
-
-	/**
-	 * Render the Find badges page dropdown.
-	 */
-	public static function render_find_page_field(): void {
-		self::render_page_dropdown(
-			Public_Facing::FIND_PAGE_OPTION,
-			'[fendigibadge_find]'
-		);
 	}
 
 	/**
@@ -315,49 +277,24 @@ final class Admin {
 	}
 
 	/**
-	 * Render Find / Issue email template tabs.
+	 * Render the issue-badge email template fields.
 	 */
 	public static function render_email_templates_field(): void {
 		$issuer = Issuer::get();
 		$option = Issuer::OPTION_KEY;
 		?>
-		<div class="fendigibadge-email-templates" data-fendigibadge-email-tabs>
-			<nav class="nav-tab-wrapper fendigibadge-email-templates__tabs" aria-label="<?php esc_attr_e( 'Email templates', 'fenton-digital-badges' ); ?>">
-				<button type="button" class="nav-tab nav-tab-active" data-fendigibadge-email-tab="find" aria-selected="true">
-					<?php esc_html_e( 'Find badge', 'fenton-digital-badges' ); ?>
-				</button>
-				<button type="button" class="nav-tab" data-fendigibadge-email-tab="issue" aria-selected="false">
-					<?php esc_html_e( 'Issue badge', 'fenton-digital-badges' ); ?>
-				</button>
-			</nav>
+		<div class="fendigibadge-email-templates">
+			<p>
+				<label for="<?php echo esc_attr( $option . '[issue_email]' ); ?>"><strong><?php esc_html_e( 'Issue badge email', 'fenton-digital-badges' ); ?></strong></label>
+			</p>
+			<textarea class="large-text" rows="4" name="<?php echo esc_attr( $option . '[issue_email]' ); ?>" id="<?php echo esc_attr( $option . '[issue_email]' ); ?>" placeholder="<?php echo esc_attr( Badge_Mailer::default_issue_intro() ); ?>"><?php echo esc_textarea( $issuer['issue_email'] ); ?></textarea>
+			<p class="description"><?php esc_html_e( 'Opening text before the list of newly issued badges. Leave blank for the default message.', 'fenton-digital-badges' ); ?></p>
 
-			<div class="fendigibadge-email-templates__panel" data-fendigibadge-email-panel="find">
-				<p>
-					<label for="<?php echo esc_attr( $option . '[find_email]' ); ?>"><strong><?php esc_html_e( 'Find badge email', 'fenton-digital-badges' ); ?></strong></label>
-				</p>
-				<textarea class="large-text" rows="4" name="<?php echo esc_attr( $option . '[find_email]' ); ?>" id="<?php echo esc_attr( $option . '[find_email]' ); ?>" placeholder="<?php echo esc_attr( Badge_Mailer::default_find_intro() ); ?>"><?php echo esc_textarea( $issuer['find_email'] ); ?></textarea>
-				<p class="description"><?php esc_html_e( 'Opening text before the list of matching badges. Leave blank for the default message.', 'fenton-digital-badges' ); ?></p>
-
-				<p>
-					<label for="<?php echo esc_attr( $option . '[find_email_signoff]' ); ?>"><strong><?php esc_html_e( 'Find badge email sign-off', 'fenton-digital-badges' ); ?></strong></label>
-				</p>
-				<textarea class="large-text" rows="4" name="<?php echo esc_attr( $option . '[find_email_signoff]' ); ?>" id="<?php echo esc_attr( $option . '[find_email_signoff]' ); ?>" placeholder="<?php echo esc_attr( Badge_Mailer::default_find_signoff() ); ?>"><?php echo esc_textarea( $issuer['find_email_signoff'] ); ?></textarea>
-				<p class="description"><?php esc_html_e( 'Closing text after the list of matching badges. Leave blank for the default sign-off.', 'fenton-digital-badges' ); ?></p>
-			</div>
-
-			<div class="fendigibadge-email-templates__panel" data-fendigibadge-email-panel="issue" hidden>
-				<p>
-					<label for="<?php echo esc_attr( $option . '[issue_email]' ); ?>"><strong><?php esc_html_e( 'Issue badge email', 'fenton-digital-badges' ); ?></strong></label>
-				</p>
-				<textarea class="large-text" rows="4" name="<?php echo esc_attr( $option . '[issue_email]' ); ?>" id="<?php echo esc_attr( $option . '[issue_email]' ); ?>" placeholder="<?php echo esc_attr( Badge_Mailer::default_issue_intro() ); ?>"><?php echo esc_textarea( $issuer['issue_email'] ); ?></textarea>
-				<p class="description"><?php esc_html_e( 'Opening text before the list of newly issued badges. Leave blank for the default message.', 'fenton-digital-badges' ); ?></p>
-
-				<p>
-					<label for="<?php echo esc_attr( $option . '[issue_email_signoff]' ); ?>"><strong><?php esc_html_e( 'Issue badge email sign-off', 'fenton-digital-badges' ); ?></strong></label>
-				</p>
-				<textarea class="large-text" rows="4" name="<?php echo esc_attr( $option . '[issue_email_signoff]' ); ?>" id="<?php echo esc_attr( $option . '[issue_email_signoff]' ); ?>" placeholder="<?php echo esc_attr( Badge_Mailer::default_issue_signoff() ); ?>"><?php echo esc_textarea( $issuer['issue_email_signoff'] ); ?></textarea>
-				<p class="description"><?php esc_html_e( 'Closing text after the list of newly issued badges. Leave blank for the default sign-off.', 'fenton-digital-badges' ); ?></p>
-			</div>
+			<p>
+				<label for="<?php echo esc_attr( $option . '[issue_email_signoff]' ); ?>"><strong><?php esc_html_e( 'Issue badge email sign-off', 'fenton-digital-badges' ); ?></strong></label>
+			</p>
+			<textarea class="large-text" rows="4" name="<?php echo esc_attr( $option . '[issue_email_signoff]' ); ?>" id="<?php echo esc_attr( $option . '[issue_email_signoff]' ); ?>" placeholder="<?php echo esc_attr( Badge_Mailer::default_issue_signoff() ); ?>"><?php echo esc_textarea( $issuer['issue_email_signoff'] ); ?></textarea>
+			<p class="description"><?php esc_html_e( 'Closing text after the list of newly issued badges. Leave blank for the default sign-off.', 'fenton-digital-badges' ); ?></p>
 		</div>
 		<?php
 	}
@@ -415,14 +352,6 @@ final class Admin {
 				settings_fields( 'fendigibadge_issuer_group' );
 				do_settings_sections( 'fendigibadge-settings' );
 				submit_button( __( 'Save settings', 'fenton-digital-badges' ) );
-				?>
-			</form>
-			<hr />
-			<form action="options.php" method="post">
-				<?php
-				settings_fields( 'fendigibadge_find_group' );
-				do_settings_sections( 'fendigibadge-find' );
-				submit_button( __( 'Save find page', 'fenton-digital-badges' ) );
 				?>
 			</form>
 			<hr />

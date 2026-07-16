@@ -54,12 +54,7 @@ $fendigibadge_attestation_url = isset( $fendigibadge_attestation_url ) && is_str
 
 	<?php if ( 'invalid' === $fendigibadge_step ) : ?>
 		<p class="fendigibadge-claim-name__notice" role="status">
-			<?php esc_html_e( 'This link is invalid, has already been used, or has expired. Request a new link from the find badges form if you still need to add your name.', 'fenton-digital-badges' ); ?>
-		</p>
-		<p class="fendigibadge-claim-name__actions">
-			<a class="fendigibadge-claim-name__btn" href="<?php echo esc_url( home_url( '/badges/find/' ) ); ?>">
-				<?php esc_html_e( 'Find your badges', 'fenton-digital-badges' ); ?>
-			</a>
+			<?php esc_html_e( 'This link is invalid, has already been used, or has expired. Contact whoever issued your badge if you still need to add your name.', 'fenton-digital-badges' ); ?>
 		</p>
 	<?php elseif ( 'done' === $fendigibadge_step ) : ?>
 		<p class="fendigibadge-claim-name__notice" role="status">

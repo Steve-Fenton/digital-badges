@@ -1,6 +1,6 @@
 <?php
 /**
- * Badge notification emails (find lookup and issue).
+ * Badge notification emails (issue).
  *
  * @package FentonDigitalBadges
  */
@@ -19,24 +19,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Badge_Mailer {
 
 	/**
-	 * Default opening text for find-badge emails.
-	 */
-	public static function default_find_intro(): string {
-		return sprintf(
-			/* translators: %s: site name */
-			__( 'You searched for your badges on %s. We found the following badges.', 'fenton-digital-badges' ),
-			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES )
-		);
-	}
-
-	/**
-	 * Default sign-off for find-badge emails.
-	 */
-	public static function default_find_signoff(): string {
-		return __( 'Enjoy your badges!', 'fenton-digital-badges' );
-	}
-
-	/**
 	 * Default opening text for issue-badge emails.
 	 */
 	public static function default_issue_intro(): string {
@@ -52,35 +34,6 @@ final class Badge_Mailer {
 	 */
 	public static function default_issue_signoff(): string {
 		return __( 'Congratulations!', 'fenton-digital-badges' );
-	}
-
-	/**
-	 * Email attestation URLs for badges found via the public lookup form.
-	 *
-	 * @param string       $email   Recipient email.
-	 * @param list<object> $results Assertion rows.
-	 */
-	public static function send_find( string $email, array $results ): void {
-		$site_name = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
-		$issuer    = Issuer::get();
-
-		$subject = sprintf(
-			/* translators: %s: site name */
-			__( 'Your badges on %s', 'fenton-digital-badges' ),
-			$site_name
-		);
-
-		$intro = trim( $issuer['find_email'] );
-		if ( '' === $intro ) {
-			$intro = self::default_find_intro();
-		}
-
-		$signoff = trim( $issuer['find_email_signoff'] );
-		if ( '' === $signoff ) {
-			$signoff = self::default_find_signoff();
-		}
-
-		self::send( $email, $subject, $intro, $signoff, self::entries_from_assertions( $results ) );
 	}
 
 	/**

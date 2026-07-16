@@ -19,11 +19,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Public_Facing {
 
 	/**
-	 * Option key for the optional Find badges WordPress page.
-	 */
-	public const FIND_PAGE_OPTION = 'fendigibadge_find_page_id';
-
-	/**
 	 * Option key for the optional attestation WordPress page.
 	 */
 	public const ATTESTATION_PAGE_OPTION = 'fendigibadge_attestation_page_id';
@@ -32,46 +27,10 @@ final class Public_Facing {
 	 * Wire public hooks.
 	 */
 	public static function init(): void {
-		add_action( 'template_redirect', array( self::class, 'maybe_prevent_find_cache' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_action( 'wp_head', array( self::class, 'maybe_output_og_tags' ), 5 );
-		add_filter( 'the_content', array( self::class, 'append_find_badge_link' ) );
 		add_shortcode( 'fendigibadge', array( self::class, 'render_badge_shortcode' ) );
-		add_shortcode( 'fendigibadge_find', array( self::class, 'render_find_shortcode' ) );
 		add_shortcode( 'fendigibadge_attestation', array( self::class, 'render_attestation_shortcode' ) );
-	}
-
-	/**
-	 * Public URL for the find-badges lookup form.
-	 */
-	public static function find_url(): string {
-		return home_url( '/badges/find/' );
-	}
-
-	/**
-	 * After the badge description on single badge pages, link to the find form.
-	 *
-	 * @param string $content Post content.
-	 */
-	public static function append_find_badge_link( string $content ): string {
-		if ( ! is_singular( Post_Types::BADGE ) || ! in_the_loop() || ! is_main_query() ) {
-			return $content;
-		}
-
-		$link = sprintf(
-			'<p class="fendigibadge-badge-find"><a class="fendigibadge-badge-find__link" href="%s">%s</a></p>',
-			esc_url( self::find_url() ),
-			esc_html__( "Check if you've earned this badge", 'fenton-digital-badges' )
-		);
-
-		return $content . "\n\n" . $link;
-	}
-
-	/**
-	 * Published page selected to host /badges/find/, if any.
-	 */
-	public static function get_find_page(): ?\WP_Post {
-		return self::get_published_page( self::FIND_PAGE_OPTION );
 	}
 
 	/**
@@ -111,7 +70,7 @@ final class Public_Facing {
 	 * - fenton-digital-badges/{view}.php
 	 * - fenton-digital-badges-{view}.php
 	 *
-	 * @param string $view View name (e.g. find, attestation).
+	 * @param string $view View name (e.g. attestation, claim-name).
 	 */
 	public static function locate_view( string $view ): string {
 		$view = sanitize_file_name( $view );
@@ -130,29 +89,6 @@ final class Public_Facing {
 		}
 
 		return FENDIGIBADGE_PATH . 'public/views/' . $view . '.php';
-	}
-
-	/**
-	 * Avoid caching pages that embed the find-badges form (nonce must stay fresh).
-	 */
-	public static function maybe_prevent_find_cache(): void {
-		if ( ! is_singular() ) {
-			return;
-		}
-
-		$post = get_post();
-		if ( ! $post instanceof \WP_Post ) {
-			return;
-		}
-
-		$find_page = self::get_find_page();
-		$is_find_page = $find_page instanceof \WP_Post && (int) $find_page->ID === (int) $post->ID;
-
-		if ( ! $is_find_page && ! has_shortcode( $post->post_content, 'fendigibadge_find' ) ) {
-			return;
-		}
-
-		Ob_Endpoints::prevent_caching();
 	}
 
 	/**
@@ -250,45 +186,6 @@ final class Public_Facing {
 		$html .= '</div>';
 
 		return $html;
-	}
-
-	/**
-	 * Shortcode: [fendigibadge_find]
-	 */
-	public static function render_find_shortcode(): string {
-		Ob_Endpoints::prevent_caching();
-
-		$error    = '';
-		$searched = false;
-
-		$request_method = isset( $_SERVER['REQUEST_METHOD'] )
-			? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) )
-			: '';
-
-		if ( 'POST' === $request_method ) {
-			$searched = true;
-			Ob_Endpoints::process_lookup_request( $error );
-		}
-
-		// Prefer the stable /badges/find/ endpoint when this request is that route
-		// (including when a selected page supplies the template).
-		if ( 'find' === get_query_var( 'fendigibadge_ob' ) ) {
-			$fendigibadge_form_action = home_url( '/badges/find/' );
-		} else {
-			$fendigibadge_form_action = get_permalink();
-			if ( ! is_string( $fendigibadge_form_action ) || '' === $fendigibadge_form_action ) {
-				$fendigibadge_form_action = home_url( '/badges/find/' );
-			}
-		}
-
-		ob_start();
-		$fendigibadge_show_header = false;
-		$vars = compact( 'error', 'searched', 'fendigibadge_form_action', 'fendigibadge_show_header' );
-		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- scoped template vars.
-		extract( $vars, EXTR_SKIP );
-		include self::locate_view( 'find' );
-
-		return (string) ob_get_clean();
 	}
 
 	/**

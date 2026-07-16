@@ -55,7 +55,6 @@ final class Ob_Endpoints {
 		add_rewrite_rule( '^ob/badges/([0-9]+)\.json$', 'index.php?fendigibadge_ob=badge&fendigibadge_ob_id=$matches[1]', 'top' );
 		add_rewrite_rule( '^ob/assertions/([^/]+)\.json$', 'index.php?fendigibadge_ob=assertion&fendigibadge_ob_uid=$matches[1]', 'top' );
 		add_rewrite_rule( '^badges/assertion/([^/]+)/?$', 'index.php?fendigibadge_ob=attestation&fendigibadge_ob_uid=$matches[1]', 'top' );
-		add_rewrite_rule( '^badges/find/?$', 'index.php?fendigibadge_ob=find', 'top' );
 		add_rewrite_rule( '^badges/claim-name/([^/]+)/?$', 'index.php?fendigibadge_ob=claim_name&fendigibadge_ob_token=$matches[1]', 'top' );
 		add_rewrite_rule( '^badges/unsubscribe/([^/]+)/?$', 'index.php?fendigibadge_ob=unsubscribe&fendigibadge_ob_token=$matches[1]', 'top' );
 	}
@@ -97,9 +96,6 @@ final class Ob_Endpoints {
 				break;
 			case 'attestation':
 				self::serve_attestation_page();
-				break;
-			case 'find':
-				self::serve_find_page();
 				break;
 			case 'claim_name':
 				self::serve_claim_name_page();
@@ -337,7 +333,7 @@ final class Ob_Endpoints {
 	}
 
 	/**
-	 * Serve the find-badges email unsubscribe page.
+	 * Serve the badge notification email unsubscribe page.
 	 */
 	private static function serve_unsubscribe_page(): void {
 		self::prevent_caching();
@@ -492,138 +488,7 @@ final class Ob_Endpoints {
 	}
 
 	/**
-	 * Serve find-badges page (also used by shortcode via Public_Facing).
-	 */
-	private static function serve_find_page(): void {
-		self::prevent_caching();
-
-		$page = Public_Facing::get_find_page();
-		if ( $page instanceof \WP_Post ) {
-			self::render_find_as_page( $page );
-			return;
-		}
-
-		$error    = '';
-		$searched = false;
-
-		$request_method = isset( $_SERVER['REQUEST_METHOD'] )
-			? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) )
-			: '';
-
-		if ( 'POST' === $request_method ) {
-			$searched = true;
-			self::process_lookup_request( $error );
-		}
-
-		self::render_view(
-			'find',
-			array(
-				'error'                   => $error,
-				'searched'                => $searched,
-				'fendigibadge_form_action' => home_url( '/badges/find/' ),
-				'fendigibadge_show_header' => true,
-			)
-		);
-	}
-
-	/**
-	 * Render /badges/find/ using a selected WordPress page and its template.
-	 *
-	 * Keeps the /badges/find/ URL while letting Site Editor / page templates
-	 * control chrome and layout. Injects the find shortcode when the page
-	 * content does not already include it.
-	 */
-	private static function render_find_as_page( \WP_Post $page ): void {
-		global $wp_query, $post;
-
-		$post = $page;
-
-		if ( $wp_query instanceof \WP_Query ) {
-			$wp_query->init_query_flags();
-			$wp_query->is_page            = true;
-			$wp_query->is_singular        = true;
-			$wp_query->is_404             = false;
-			$wp_query->is_home            = false;
-			$wp_query->is_front_page      = false;
-			$wp_query->is_single          = false;
-			$wp_query->is_archive         = false;
-			$wp_query->posts              = array( $page );
-			$wp_query->post               = $page;
-			$wp_query->post_count         = 1;
-			$wp_query->found_posts        = 1;
-			$wp_query->max_num_pages      = 1;
-			$wp_query->queried_object     = $page;
-			$wp_query->queried_object_id  = (int) $page->ID;
-		}
-
-		setup_postdata( $page );
-
-		add_filter( 'the_content', array( self::class, 'maybe_append_find_shortcode' ), 5 );
-
-		remove_action( 'wp_head', 'rel_canonical' );
-		add_action(
-			'wp_head',
-			static function (): void {
-				printf( '<link rel="canonical" href="%s" />' . "\n", esc_url( home_url( '/badges/find/' ) ) );
-			},
-			2
-		);
-
-		Public_Facing::enqueue_assets();
-		add_action( 'wp_head', array( self::class, 'print_public_styles' ), 5 );
-		add_action( 'wp_footer', array( self::class, 'print_public_scripts' ), 20 );
-
-		status_header( 200 );
-		nocache_headers();
-
-		$template = get_page_template();
-
-		if ( ! is_string( $template ) || '' === $template || ! is_readable( $template ) ) {
-			remove_filter( 'the_content', array( self::class, 'maybe_append_find_shortcode' ), 5 );
-
-			$error    = '';
-			$searched = false;
-
-			$request_method = isset( $_SERVER['REQUEST_METHOD'] )
-				? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) )
-				: '';
-
-			if ( 'POST' === $request_method ) {
-				$searched = true;
-				self::process_lookup_request( $error );
-			}
-
-			self::render_view(
-				'find',
-				array(
-					'error'                   => $error,
-					'searched'                => $searched,
-					'fendigibadge_form_action' => home_url( '/badges/find/' ),
-					'fendigibadge_show_header' => true,
-				)
-			);
-			return;
-		}
-
-		include $template;
-		exit;
-	}
-
-	/**
-	 * Ensure the selected find page outputs the lookup form.
-	 *
-	 * @param string $content Post content.
-	 */
-	public static function maybe_append_find_shortcode( string $content ): string {
-		if ( has_shortcode( $content, 'fendigibadge_find' ) ) {
-			return $content;
-		}
-
-		return $content . "\n\n[fendigibadge_find]";
-	}
-
-	/**
-	 * Prevent page caches from storing nonce-bearing find forms.
+	 * Prevent page caches from storing nonce-bearing forms.
 	 */
 	public static function prevent_caching(): void {
 		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
@@ -641,92 +506,6 @@ final class Ob_Endpoints {
 
 		nocache_headers();
 	}
-
-/**
- * Process email lookup POST (shared by page + shortcode).
- *
- * Always shows the same success path in the UI to avoid email enumeration.
- * When matching badges exist, their attestation URLs are emailed to the address.
- * Runs at most once per request so a double-rendered shortcode cannot send twice.
- *
- * Limits:
- * - Per IP: at most 8 submissions per 10 minutes (explicit error).
- * - Per email: at most one lookup every 30 minutes (same success UI; no re-send).
- *
- * @param string $error Error message by reference.
- */
-public static function process_lookup_request( string &$error ): void {
-	static $processed = false;
-	static $cached_error = '';
-
-	if ( $processed ) {
-		$error = $cached_error;
-		return;
-	}
-
-	$processed = true;
-	$error     = '';
-
-	$nonce = isset( $_POST['fendigibadge_find_nonce'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['fendigibadge_find_nonce'] ) ) : '';
-
-	if ( ! wp_verify_nonce( $nonce, 'fendigibadge_find_badges' ) ) {
-		$error         = __( 'Invalid request. Please try again.', 'fenton-digital-badges' );
-		$cached_error  = $error;
-		return;
-	}
-
-	$email = isset( $_POST['fendigibadge_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['fendigibadge_email'] ) ) : '';
-
-	if ( ! Identity::is_valid_email( $email ) ) {
-		$error         = __( 'Please enter a valid email address.', 'fenton-digital-badges' );
-		$cached_error  = $error;
-		return;
-	}
-
-	// Per-IP limit first so probing many addresses still burns quota.
-	$ip      = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
-	$ip_key  = 'fendigibadge_find_ip_' . md5( $ip );
-	$ip_hits = (int) get_transient( $ip_key );
-
-	if ( $ip_hits >= 8 ) {
-		$error        = __( 'Too many lookups. Please wait a few minutes and try again.', 'fenton-digital-badges' );
-		$cached_error = $error;
-		unset( $email );
-		return;
-	}
-
-	set_transient( $ip_key, $ip_hits + 1, 10 * MINUTE_IN_SECONDS );
-
-	// Checked before hashing so opted-out addresses are never used for lookup.
-	if ( Email_Unsubscribe::is_unsubscribed( $email ) ) {
-		$cached_error = $error;
-		unset( $email );
-		return;
-	}
-
-	$lookup = Identity::lookup_hash( $email );
-
-	// Same-address cooldown: keep the usual success message (no enumeration leak).
-	$email_key = 'fendigibadge_find_em_' . $lookup;
-	if ( false !== get_transient( $email_key ) ) {
-		$cached_error = $error;
-		unset( $email, $lookup );
-		return;
-	}
-
-	set_transient( $email_key, 1, 30 * MINUTE_IN_SECONDS );
-
-	$results = Assertion_Repository::find_by_lookup( $lookup );
-
-	if ( array() !== $results ) {
-		Badge_Mailer::send_find( $email, $results );
-	}
-
-	$cached_error = $error;
-
-	// Discard plaintext email after use.
-	unset( $email, $lookup );
-}
 
 	/**
 	 * Render a view template and exit.
@@ -767,14 +546,14 @@ public static function process_lookup_request( string &$error ): void {
 	}
 
 	/**
-	 * Print public CSS for attestation/find pages.
+	 * Print public CSS for attestation/claim-name pages.
 	 */
 	public static function print_public_styles(): void {
 		wp_print_styles( 'fendigibadge-public' );
 	}
 
 	/**
-	 * Print public JS for attestation/find pages.
+	 * Print public JS for attestation/claim-name pages.
 	 */
 	public static function print_public_scripts(): void {
 		wp_print_scripts( 'fendigibadge-public' );
@@ -817,9 +596,6 @@ public static function process_lookup_request( string &$error ): void {
 
 		if ( isset( $vars['badge'] ) && $vars['badge'] instanceof \WP_Post ) {
 			$title = get_the_title( $vars['badge'] );
-		} elseif ( 'find' === $view ) {
-			$title = __( 'Find your badges', 'fenton-digital-badges' );
-			$canonical = home_url( '/badges/find/' );
 		} elseif ( 'claim-name' === $view ) {
 			$title = __( 'Add your name', 'fenton-digital-badges' );
 			if ( isset( $vars['fendigibadge_form_action'] ) && is_string( $vars['fendigibadge_form_action'] ) && '' !== $vars['fendigibadge_form_action'] ) {

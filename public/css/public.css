@@ -20,50 +20,6 @@
 	font-size: 1rem;
 }
 
-.fendigibadge-badge-find {
-	margin: 1.25rem 0 0;
-}
-
-.fendigibadge-badge-find__link {
-	font-weight: 600;
-}
-
-.fendigibadge-find {
-	max-width: 40rem;
-	margin: 2rem auto;
-	padding: 0;
-}
-
-.fendigibadge-find__title {
-	margin: 0 0 0.5rem;
-	font-size: 1.75rem;
-}
-
-.fendigibadge-find__intro {
-	margin: 0 0 1.5rem;
-	color: #444;
-}
-
-.fendigibadge-find__label {
-	display: block;
-	margin-bottom: 0.35rem;
-	font-weight: 600;
-}
-
-.fendigibadge-find__row {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5rem;
-}
-
-.fendigibadge-find__input {
-	flex: 1 1 14rem;
-	padding: 0.55rem 0.75rem;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-}
-
-.fendigibadge-find__submit,
 .fendigibadge-attestation__btn {
 	display: inline-flex;
 	align-items: center;
@@ -82,7 +38,6 @@
 	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
-.fendigibadge-find__submit:hover,
 .fendigibadge-attestation__btn:hover {
 	transform: translateY(-1px);
 }
@@ -119,15 +74,6 @@
 	background: var(--fendigibadge-surface-muted, #f5f1eb);
 	border-color: var(--fendigibadge-ink-muted, #44403c);
 	color: var(--fendigibadge-ink, #1c1917);
-}
-
-.fendigibadge-find__error {
-	margin-top: 1rem;
-	color: #b32d2e;
-}
-
-.fendigibadge-find__notice {
-	margin-top: 1rem;
 }
 
 .fendigibadge-claim-name {
