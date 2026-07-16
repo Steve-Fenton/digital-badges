@@ -295,9 +295,10 @@ final class Assertion_Repository {
 	/**
 	 * Paginated assertion list for admin.
 	 *
+	 * @param string $recipient_lookup Optional recipient lookup HMAC to filter by (admin email search).
 	 * @return array{items: list<object>, total: int}
 	 */
-	public static function list_assertions( int $page = 1, int $per_page = 20, int $badge_post_id = 0 ): array {
+	public static function list_assertions( int $page = 1, int $per_page = 20, int $badge_post_id = 0, string $recipient_lookup = '' ): array {
 		global $wpdb;
 
 		$table    = self::table_name();
@@ -305,39 +306,33 @@ final class Assertion_Repository {
 		$per_page = max( 1, min( 100, $per_page ) );
 		$offset   = ( $page - 1 ) * $per_page;
 
+		$where  = array();
+		$params = array();
+
 		if ( $badge_post_id > 0 ) {
-			$total = (int) $wpdb->get_var(
-				$wpdb->prepare(
-					'SELECT COUNT(*) FROM %i WHERE badge_post_id = %d',
-					$table,
-					$badge_post_id
-				)
-			);
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					'SELECT * FROM %i WHERE badge_post_id = %d ORDER BY created_at DESC LIMIT %d OFFSET %d',
-					$table,
-					$badge_post_id,
-					$per_page,
-					$offset
-				)
-			);
-		} else {
-			$total = (int) $wpdb->get_var(
-				$wpdb->prepare(
-					'SELECT COUNT(*) FROM %i',
-					$table
-				)
-			);
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					'SELECT * FROM %i ORDER BY created_at DESC LIMIT %d OFFSET %d',
-					$table,
-					$per_page,
-					$offset
-				)
-			);
+			$where[]  = 'badge_post_id = %d';
+			$params[] = $badge_post_id;
 		}
+
+		if ( '' !== $recipient_lookup ) {
+			$where[]  = 'recipient_lookup = %s';
+			$params[] = $recipient_lookup;
+		}
+
+		$where_sql = array() !== $where ? ' WHERE ' . implode( ' AND ', $where ) : '';
+
+		$total = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM %i{$where_sql}", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where_sql only contains literal column names and placeholders built above.
+				array_merge( array( $table ), $params )
+			)
+		);
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM %i{$where_sql} ORDER BY created_at DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where_sql only contains literal column names and placeholders built above.
+				array_merge( array( $table ), $params, array( $per_page, $offset ) )
+			)
+		);
 
 		if ( ! is_array( $rows ) ) {
 			$rows = array();

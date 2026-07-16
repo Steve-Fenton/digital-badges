@@ -602,8 +602,22 @@ final class Admin {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list pagination/filter.
 		$page = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list pagination/filter.
-		$badge_id    = isset( $_GET['badge_id'] ) ? absint( $_GET['badge_id'] ) : 0;
-		$result      = Assertion_Repository::list_assertions( $page, 20, $badge_id );
+		$badge_id = isset( $_GET['badge_id'] ) ? absint( $_GET['badge_id'] ) : 0;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list pagination/filter.
+		$email_filter = isset( $_GET['fendigibadge_email'] ) ? sanitize_email( wp_unslash( (string) $_GET['fendigibadge_email'] ) ) : '';
+
+		$lookup_filter = '';
+		$email_invalid = false;
+
+		if ( '' !== $email_filter ) {
+			if ( Identity::is_valid_email( $email_filter ) ) {
+				$lookup_filter = Identity::lookup_hash( $email_filter );
+			} else {
+				$email_invalid = true;
+			}
+		}
+
+		$result      = Assertion_Repository::list_assertions( $page, 20, $badge_id, $lookup_filter );
 		$total_pages = (int) ceil( $result['total'] / 20 );
 
 		$notice = get_transient( 'fendigibadge_assertion_notice_' . get_current_user_id() );
@@ -625,6 +639,27 @@ final class Admin {
 			<?php if ( isset( $notice_messages[ $notice ] ) ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php echo esc_html( $notice_messages[ $notice ] ); ?></p></div>
 			<?php endif; ?>
+
+			<?php if ( $email_invalid ) : ?>
+				<div class="notice notice-error"><p><?php esc_html_e( 'Enter a valid email address to search.', 'fenton-digital-badges' ); ?></p></div>
+			<?php elseif ( '' !== $lookup_filter && array() === $result['items'] ) : ?>
+				<div class="notice notice-info"><p><?php esc_html_e( 'No badges found for that email address.', 'fenton-digital-badges' ); ?></p></div>
+			<?php endif; ?>
+
+			<form class="fendigibadge-assertions-filter" method="get">
+				<input type="hidden" name="post_type" value="<?php echo esc_attr( Post_Types::BADGE ); ?>" />
+				<input type="hidden" name="page" value="fendigibadge-assertions" />
+				<?php if ( $badge_id > 0 ) : ?>
+					<input type="hidden" name="badge_id" value="<?php echo esc_attr( (string) $badge_id ); ?>" />
+				<?php endif; ?>
+				<label class="screen-reader-text" for="fendigibadge_email_filter"><?php esc_html_e( 'Find badges by recipient email', 'fenton-digital-badges' ); ?></label>
+				<input type="email" class="regular-text" name="fendigibadge_email" id="fendigibadge_email_filter" value="<?php echo esc_attr( $email_filter ); ?>" placeholder="<?php esc_attr_e( 'Find badges by recipient email…', 'fenton-digital-badges' ); ?>" />
+				<?php submit_button( __( 'Search', 'fenton-digital-badges' ), 'secondary', 'fendigibadge_email_search', false ); ?>
+				<?php if ( '' !== $email_filter ) : ?>
+					<a class="button" href="<?php echo esc_url( remove_query_arg( array( 'fendigibadge_email', 'paged' ) ) ); ?>"><?php esc_html_e( 'Clear', 'fenton-digital-badges' ); ?></a>
+				<?php endif; ?>
+				<p class="description"><?php esc_html_e( 'Compares a hash of the entered email against stored recipient hashes. The address itself is not stored or emailed.', 'fenton-digital-badges' ); ?></p>
+			</form>
 
 			<table class="wp-list-table widefat fixed striped">
 				<thead>

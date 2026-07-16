@@ -29,3 +29,16 @@
 .fendigibadge-email-templates > p:first-child {
 	margin-top: 0;
 }
+
+.fendigibadge-assertions-filter {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 1rem 0;
+}
+
+.fendigibadge-assertions-filter .description {
+	flex: 1 0 100%;
+	margin: 0.35rem 0 0;
+}

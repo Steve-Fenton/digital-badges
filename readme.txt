@@ -87,6 +87,7 @@ This release implements Open Badges 1.0 JSON endpoints and assertions.
 
 = 0.1.36 =
 * Removed the public "find my badges" email lookup form and its `/badges/find/` endpoint, `[fendigibadge_find]` shortcode, and Find badges page setting. This was the only public, unauthenticated endpoint that could trigger an email; badge notification emails are now only sent when a WordPress user issues a badge. The one-time name-claim link and unsubscribe link are unaffected.
+* Added an admin-only email search to **Badges → Assertions** so signed-in administrators can find a recipient's badges by comparing the email's hash against stored assertions. No email is sent and the address is not stored.
 
 = 0.1.29 =
 * Tightened find-badges rate limits: 8 submissions per IP per 10 minutes, and one lookup per email every 30 minutes.
