@@ -38,7 +38,15 @@
 	margin: 1rem 0;
 }
 
+.fendigibadge-assertions-filter select {
+	max-width: 16rem;
+}
+
 .fendigibadge-assertions-filter .description {
 	flex: 1 0 100%;
 	margin: 0.35rem 0 0;
+}
+
+.fendigibadge-assertions-filter + .tablenav.top {
+	margin-top: 0;
 }

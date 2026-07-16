@@ -18,6 +18,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Admin {
 
+	/** Default assertions list page size. */
+	private const ASSERTIONS_DEFAULT_PER_PAGE = 20;
+
+	/** Allowed assertions list page sizes. */
+	private const ASSERTIONS_PER_PAGE_OPTIONS = array( 20, 50, 100 );
+
 	/**
 	 * Wire admin hooks.
 	 */
@@ -612,6 +618,7 @@ final class Admin {
 		$badge_id = isset( $_GET['badge_id'] ) ? absint( $_GET['badge_id'] ) : 0;
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list pagination/filter.
 		$email_filter = isset( $_GET['fendigibadge_email'] ) ? sanitize_email( wp_unslash( (string) $_GET['fendigibadge_email'] ) ) : '';
+		$per_page       = self::assertions_per_page_from_request();
 
 		$lookup_filter = '';
 		$email_invalid = false;
@@ -624,8 +631,45 @@ final class Admin {
 			}
 		}
 
-		$result      = Assertion_Repository::list_assertions( $page, 20, $badge_id, $lookup_filter );
-		$total_pages = (int) ceil( $result['total'] / 20 );
+		$badges = get_posts(
+			array(
+				'post_type'      => Post_Types::BADGE,
+				'post_status'    => 'publish',
+				'posts_per_page' => 100,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			)
+		);
+
+		if ( $badge_id > 0 ) {
+			$listed_ids = array_map(
+				static function ( $badge ): int {
+					return $badge instanceof \WP_Post ? (int) $badge->ID : 0;
+				},
+				$badges
+			);
+
+			if ( ! in_array( $badge_id, $listed_ids, true ) ) {
+				$selected_badge = get_post( $badge_id );
+				if ( $selected_badge instanceof \WP_Post && Post_Types::BADGE === $selected_badge->post_type ) {
+					$badges[] = $selected_badge;
+				}
+			}
+		}
+
+		$result      = Assertion_Repository::list_assertions( $page, $per_page, $badge_id, $lookup_filter );
+		$total       = (int) $result['total'];
+		$total_pages = $total > 0 ? (int) ceil( $total / $per_page ) : 0;
+
+		if ( $total_pages > 0 && $page > $total_pages ) {
+			$page        = $total_pages;
+			$result      = Assertion_Repository::list_assertions( $page, $per_page, $badge_id, $lookup_filter );
+			$total       = (int) $result['total'];
+			$total_pages = (int) ceil( $total / $per_page );
+		}
+
+		$has_filters      = $badge_id > 0 || '' !== $email_filter || self::ASSERTIONS_DEFAULT_PER_PAGE !== $per_page;
+		$has_list_filters = $badge_id > 0 || '' !== $lookup_filter;
 
 		$notice = get_transient( 'fendigibadge_assertion_notice_' . get_current_user_id() );
 		if ( is_string( $notice ) && '' !== $notice ) {
@@ -656,17 +700,42 @@ final class Admin {
 			<form class="fendigibadge-assertions-filter" method="get">
 				<input type="hidden" name="post_type" value="<?php echo esc_attr( Post_Types::BADGE ); ?>" />
 				<input type="hidden" name="page" value="fendigibadge-assertions" />
-				<?php if ( $badge_id > 0 ) : ?>
-					<input type="hidden" name="badge_id" value="<?php echo esc_attr( (string) $badge_id ); ?>" />
-				<?php endif; ?>
+				<label class="screen-reader-text" for="fendigibadge_badge_filter"><?php esc_html_e( 'Filter by badge', 'fenton-digital-badges' ); ?></label>
+				<select name="badge_id" id="fendigibadge_badge_filter">
+					<option value="0"><?php esc_html_e( 'All badges', 'fenton-digital-badges' ); ?></option>
+					<?php foreach ( $badges as $badge ) : ?>
+						<?php if ( ! $badge instanceof \WP_Post ) : ?>
+							<?php continue; ?>
+						<?php endif; ?>
+						<option value="<?php echo esc_attr( (string) $badge->ID ); ?>" <?php selected( $badge_id, (int) $badge->ID ); ?>>
+							<?php echo esc_html( get_the_title( $badge ) ?: '#' . (string) $badge->ID ); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
 				<label class="screen-reader-text" for="fendigibadge_email_filter"><?php esc_html_e( 'Find badges by recipient email', 'fenton-digital-badges' ); ?></label>
 				<input type="email" class="regular-text" name="fendigibadge_email" id="fendigibadge_email_filter" value="<?php echo esc_attr( $email_filter ); ?>" placeholder="<?php esc_attr_e( 'Find badges by recipient email…', 'fenton-digital-badges' ); ?>" />
-				<?php submit_button( __( 'Search', 'fenton-digital-badges' ), 'secondary', 'fendigibadge_email_search', false ); ?>
-				<?php if ( '' !== $email_filter ) : ?>
-					<a class="button" href="<?php echo esc_url( remove_query_arg( array( 'fendigibadge_email', 'paged' ) ) ); ?>"><?php esc_html_e( 'Clear', 'fenton-digital-badges' ); ?></a>
+				<label class="screen-reader-text" for="fendigibadge_per_page"><?php esc_html_e( 'Items per page', 'fenton-digital-badges' ); ?></label>
+				<select name="per_page" id="fendigibadge_per_page">
+					<?php foreach ( self::ASSERTIONS_PER_PAGE_OPTIONS as $option ) : ?>
+						<option value="<?php echo esc_attr( (string) $option ); ?>" <?php selected( $per_page, $option ); ?>>
+							<?php
+							printf(
+								/* translators: %d: number of assertions per page */
+								esc_html__( '%d per page', 'fenton-digital-badges' ),
+								absint( $option )
+							);
+							?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+				<?php submit_button( __( 'Filter', 'fenton-digital-badges' ), 'secondary', 'fendigibadge_assertions_filter', false ); ?>
+				<?php if ( $has_filters ) : ?>
+					<a class="button" href="<?php echo esc_url( self::assertions_list_url() ); ?>"><?php esc_html_e( 'Clear filters', 'fenton-digital-badges' ); ?></a>
 				<?php endif; ?>
 				<p class="description"><?php esc_html_e( 'Compares a hash of the entered email against stored recipient hashes. The address itself is not stored or emailed.', 'fenton-digital-badges' ); ?></p>
 			</form>
+
+			<?php self::render_assertions_tablenav( $page, $per_page, $total, $total_pages, $badge_id, $email_filter, 'top' ); ?>
 
 			<table class="wp-list-table widefat fixed striped">
 				<thead>
@@ -681,7 +750,17 @@ final class Admin {
 				</thead>
 				<tbody>
 					<?php if ( array() === $result['items'] ) : ?>
-						<tr><td colspan="6"><?php esc_html_e( 'No assertions yet.', 'fenton-digital-badges' ); ?></td></tr>
+						<tr>
+							<td colspan="6">
+								<?php
+								echo esc_html(
+									$has_list_filters
+										? __( 'No assertions match your filters.', 'fenton-digital-badges' )
+										: __( 'No assertions yet.', 'fenton-digital-badges' )
+								);
+								?>
+							</td>
+						</tr>
 					<?php else : ?>
 						<?php foreach ( $result['items'] as $row ) : ?>
 							<?php
@@ -745,14 +824,116 @@ final class Admin {
 				</tbody>
 			</table>
 
-			<?php if ( $total_pages > 1 ) : ?>
-				<div class="tablenav">
-					<div class="tablenav-pages">
+			<?php self::render_assertions_tablenav( $page, $per_page, $total, $total_pages, $badge_id, $email_filter, 'bottom' ); ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Parse assertions list page size from the request.
+	 */
+	private static function assertions_per_page_from_request(): int {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list pagination/filter.
+		if ( ! isset( $_GET['per_page'] ) ) {
+			return self::ASSERTIONS_DEFAULT_PER_PAGE;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list pagination/filter.
+		$requested = absint( $_GET['per_page'] );
+
+		return in_array( $requested, self::ASSERTIONS_PER_PAGE_OPTIONS, true )
+			? $requested
+			: self::ASSERTIONS_DEFAULT_PER_PAGE;
+	}
+
+	/**
+	 * Build query args for the Assertions admin list URL.
+	 *
+	 * @return array<string, int|string>
+	 */
+	private static function assertions_list_query_args( int $page = 0, int $per_page = 0, int $badge_id = 0, string $email_filter = '' ): array {
+		$args = array(
+			'post_type' => Post_Types::BADGE,
+			'page'      => 'fendigibadge-assertions',
+		);
+
+		if ( $page > 1 ) {
+			$args['paged'] = $page;
+		}
+
+		$per_page = $per_page > 0 ? $per_page : self::ASSERTIONS_DEFAULT_PER_PAGE;
+		if ( self::ASSERTIONS_DEFAULT_PER_PAGE !== $per_page ) {
+			$args['per_page'] = $per_page;
+		}
+
+		if ( $badge_id > 0 ) {
+			$args['badge_id'] = $badge_id;
+		}
+
+		if ( '' !== $email_filter ) {
+			$args['fendigibadge_email'] = $email_filter;
+		}
+
+		return $args;
+	}
+
+	/**
+	 * Build the Assertions admin list URL.
+	 *
+	 * @param array<string, int|string> $overrides Optional query args to merge.
+	 */
+	private static function assertions_list_url( array $overrides = array() ): string {
+		return add_query_arg(
+			array_merge(
+				self::assertions_list_query_args(),
+				$overrides
+			),
+			admin_url( 'edit.php' )
+		);
+	}
+
+	/**
+	 * Render pagination and item count for the Assertions list.
+	 */
+	private static function render_assertions_tablenav(
+		int $page,
+		int $per_page,
+		int $total,
+		int $total_pages,
+		int $badge_id,
+		string $email_filter,
+		string $position
+	): void {
+		$list_url = self::assertions_list_url(
+			self::assertions_list_query_args( 0, $per_page, $badge_id, $email_filter )
+		);
+		?>
+		<div class="tablenav <?php echo esc_attr( $position ); ?>">
+			<div class="tablenav-pages">
+				<span class="displaying-num">
+					<?php
+					if ( 0 === $total ) {
+						esc_html_e( '0 items', 'fenton-digital-badges' );
+					} else {
+						$start = ( ( $page - 1 ) * $per_page ) + 1;
+						$end   = min( $page * $per_page, $total );
+						printf(
+							/* translators: 1: first item number, 2: last item number, 3: total items */
+							esc_html__( 'Showing %1$s–%2$s of %3$s', 'fenton-digital-badges' ),
+							esc_html( number_format_i18n( $start ) ),
+							esc_html( number_format_i18n( $end ) ),
+							esc_html( number_format_i18n( $total ) )
+						);
+					}
+					?>
+				</span>
+				<?php if ( $total_pages > 1 ) : ?>
+					<span class="pagination-links">
 						<?php
 						echo wp_kses_post(
 							paginate_links(
 								array(
-									'base'      => add_query_arg( 'paged', '%#%' ),
+									'base'      => add_query_arg( 'paged', '%#%', $list_url ),
 									'format'    => '',
 									'current'   => $page,
 									'total'     => $total_pages,
@@ -762,9 +943,9 @@ final class Admin {
 							) ?: ''
 						);
 						?>
-					</div>
-				</div>
-			<?php endif; ?>
+					</span>
+				<?php endif; ?>
+			</div>
 		</div>
 		<?php
 	}
