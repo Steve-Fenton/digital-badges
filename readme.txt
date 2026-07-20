@@ -16,17 +16,11 @@ Fenton Digital Badges lets you issue [Open Badges 1.0](https://github.com/mozill
 
 **Features**
 
-* Configure an issuing organization (name, URL, logo, contact details)
-* Create badge classes as a custom post type with image, criteria URL, earn URL, and tags
-* Issue badges in bulk from CSV (email required; name, evidence, and expiry optional)
-* Email earners when a badge is issued, with a link to their attestation page
-* Public Open Badges JSON endpoints for issuer, badge class, and assertion
-* Public attestation pages with share, download, and LinkedIn Add to Profile
-* Issue emails include a one-time link so earners can add their name, and a secure link to stop future notifications
-* Assertions list with revoke, restore, and delete (revoked only)
-* Assertion filters on **Badges → Assertions** — filter by badge type, search by recipient email (hashed lookup; no email is stored), and choose items per page
-* **Badges → Stats** — issued, claimed, and claimed % totals, plus a per–badge-type breakdown table
-* Recipient emails are salted/hashed — plaintext emails are not stored on assertions (unsubscribe opt-outs are an exception)
+* Configure an issuing organization
+* Create badges
+* Issue badges, with email notifications to the recipient
+* Public attestation pages show the badge and links to share it
+* Admin views over the list of badges, assertions, and basic statistics
 
 You can add templates for the badge pages using `/wp-admin/site-editor.php?p=%2Ftemplate` on your site.
 
@@ -37,7 +31,6 @@ To control the layout of `/badges/assertion/{uid}/`, create a Page, optionally a
 
 **Shortcodes**
 
-* `[fendigibadge id="123"]` — display a badge
 * `[fendigibadge_attestation]` — certificate markup on `/badges/assertion/{uid}/` when using a page template
 
 **Public endpoints**
