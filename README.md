@@ -79,6 +79,13 @@ uninstall.php               Cleanup on uninstall
 
 Creates `dist/fenton-digital-badges-{version}.zip` for manual install or WordPress.org submission. Updates `fenton-digital-badges.php` and `readme.txt` Stable tag when bumping.
 
+To push a new version to the WordPress plugin repository (replace with the appropriate version):
+
+```bash
+git tag 0.1.39
+git push origin 0.1.39
+```
+
 ## Requirements
 
 - WordPress 6.2+
