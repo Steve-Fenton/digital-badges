@@ -3,7 +3,7 @@
  * Plugin Name:       Fenton Digital Badges
  * Plugin URI:        https://github.com/Steve-Fenton/digital-badges
  * Description:       Issue, manage, and display digital badges.
- * Version:           0.1.38
+ * Version:           0.1.39
  * Requires at least: 6.2
  * Tested up to:      7.1
  * Requires PHP:      8.0
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FENDIGIBADGE_VERSION', '0.1.38' );
+define( 'FENDIGIBADGE_VERSION', '0.1.39' );
 define( 'FENDIGIBADGE_FILE', __FILE__ );
 define( 'FENDIGIBADGE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FENDIGIBADGE_URL', plugin_dir_url( __FILE__ ) );

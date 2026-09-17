@@ -2,9 +2,9 @@
 Contributors: Steve_Fenton
 Tags: badges, open badges, credentials, certificates, linkedin
 Requires at least: 6.2
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.37
+Stable tag: 0.1.39
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
